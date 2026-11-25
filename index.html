@@ -1,0 +1,2605 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" id="meta-theme-color" content="#F6F2EB">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Sora & Tsuki">
+    <title>Sora & Tsuki — 朝と夜のルーティーン</title>
+    <!-- Google Fonts: Cormorant Garamond, Shippori Mincho, Inter, Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500;600&family=Shippori+Mincho:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tone.js for gentle sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans JP', 'sans-serif'],
+                        serif: ['Cormorant Garamond', 'Shippori Mincho', 'serif'],
+                        mincho: ['Shippori Mincho', 'serif'],
+                    },
+                    colors: {
+                        morning: {
+                            bg: '#F6F2EB',
+                            card: 'rgba(255, 255, 255, 0.76)',
+                            subtle: 'rgba(235, 228, 217, 0.65)',
+                            text: '#231F1B',
+                            muted: '#787067',
+                            accent: '#BE6E32',
+                            gold: '#D89B52',
+                            accentSoft: 'rgba(190, 110, 50, 0.11)',
+                        },
+                        night: {
+                            bg: '#090D18',
+                            card: 'rgba(20, 27, 45, 0.72)',
+                            subtle: 'rgba(34, 45, 72, 0.65)',
+                            text: '#EDF0F7',
+                            muted: '#8E9BB5',
+                            accent: '#90A2FF',
+                            gold: '#DFC58E',
+                            accentSoft: 'rgba(144, 162, 255, 0.14)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            transition: background-color 0.7s cubic-bezier(0.22, 1, 0.36, 1), color 0.6s ease;
+            overflow-x: hidden;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* アンビエント光のオーブ（背景の空気感） */
+        .ambient-orb {
+            position: fixed;
+            border-radius: 9999px;
+            filter: blur(85px);
+            pointer-events: none;
+            z-index: 0;
+            transition: background 1.2s ease, opacity 1.2s ease, transform 1.2s ease;
+        }
+        @keyframes slowFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(14px, -18px) scale(1.06); }
+        }
+        .animate-float-slow {
+            animation: slowFloat 14s ease-in-out infinite;
+        }
+        .animate-float-reverse {
+            animation: slowFloat 18s ease-in-out infinite reverse;
+        }
+
+        /* 繊細なガラス質感 */
+        .glass-morning {
+            background: rgba(255, 255, 255, 0.74);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 8px 32px -12px rgba(68, 52, 34, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+        .glass-night {
+            background: rgba(20, 27, 45, 0.68);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 12px 36px -12px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        /* プログレスリング＆天体アニメーション */
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .celestial-transition {
+            transition: all 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes checkPop {
+            0% { transform: scale(0.8); }
+            55% { transform: scale(1.16); }
+            100% { transform: scale(1); }
+        }
+        .animate-check {
+            animation: checkPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up {
+            animation: fadeUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.25; transform: scale(0.85); }
+            50% { opacity: 1; transform: scale(1.15); }
+        }
+        .star-twinkle {
+            animation: twinkle 3.6s ease-in-out infinite;
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* 音声入力中の柔らかなパルスアニメーション */
+        @keyframes voicePulse {
+            0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.45); }
+            70% { box-shadow: 0 0 0 10px rgba(225, 29, 72, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+        }
+        .voice-listening {
+            background-color: #E11D48 !important;
+            color: #FFFFFF !important;
+            border-color: transparent !important;
+            animation: voicePulse 1.4s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+        }
+
+        /* ホーム画面起動（スタンドアロン）時のセーフエリア対応 */
+        .safe-top {
+            padding-top: calc(1.25rem + env(safe-area-inset-top));
+        }
+        .safe-bottom-nav {
+            bottom: calc(1rem + env(safe-area-inset-bottom));
+        }
+        .safe-bottom-space {
+            padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased relative">
+
+    <!-- 背景アンビエント光のレイヤー -->
+    <div id="orb-top" class="ambient-orb w-80 h-80 -top-24 -right-20 animate-float-slow"></div>
+    <div id="orb-bottom" class="ambient-orb w-96 h-96 top-1/2 -left-32 animate-float-reverse"></div>
+
+    <!-- 祝福用紙吹雪キャンバス -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- メインアプリコンテナ -->
+    <div id="app" class="relative z-10 max-w-xl mx-auto min-h-screen flex flex-col safe-bottom-space">
+        
+        <!-- ヘッダー -->
+        <header class="sticky top-0 z-30 px-5 safe-top pb-3 transition-colors duration-500" id="main-header">
+            <div class="flex items-center justify-between gap-3">
+                <!-- ブランド・日付 -->
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span id="header-greeting" class="font-serif italic text-xs tracking-[0.18em] uppercase opacity-70">Good Morning</span>
+                        <span class="w-1 h-1 rounded-full bg-current opacity-30"></span>
+                        <span id="header-date" class="text-[11px] tracking-wide opacity-60"></span>
+                    </div>
+                    <h1 class="font-serif text-2xl font-medium tracking-wide mt-0.5 leading-none">
+                        Sora <span class="italic font-normal opacity-60">&amp;</span> Tsuki
+                    </h1>
+                </div>
+
+                <!-- 朝・夜 切り替えセグメント & サウンド切替 & ホーム画面追加 -->
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                    <button id="install-app-btn" onclick="openInstallModal()" title="ホーム画面に追加" class="p-2.5 rounded-full transition-all duration-300 focus:outline-none" aria-label="ホーム画面に追加">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/><path d="M12 7v6"/><path d="m9 10 3 3 3-3"/></svg>
+                    </button>
+                    <button id="sound-toggle-btn" onclick="toggleSound()" title="効果音のオン/オフ" class="p-2.5 rounded-full transition-all duration-300 focus:outline-none" aria-label="サウンド切替">
+                    </button>
+                    <div id="period-switcher" class="flex p-1 rounded-full border transition-all duration-300">
+                        <button onclick="setPeriod('morning')" id="btn-period-morning" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-300">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                            <span>朝</span>
+                        </button>
+                        <button onclick="setPeriod('night')" id="btn-period-night" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-300">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                            <span>夜</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- メインコンテンツ領域 -->
+        <main id="main-content" class="flex-1 px-5 pt-2 space-y-5">
+            <!-- JSで描画 -->
+        </main>
+
+        <!-- フローティング・ボトムナビゲーション -->
+        <div class="fixed safe-bottom-nav left-0 right-0 z-30 px-5 pointer-events-none">
+            <nav id="bottom-nav" class="max-w-md mx-auto rounded-full px-2 py-1.5 pointer-events-auto transition-all duration-500">
+                <div class="grid grid-cols-3 gap-1">
+                    <button onclick="setTab('today')" id="nav-today" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-full transition-all duration-300">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
+                        <span class="text-xs font-medium">今日</span>
+                    </button>
+                    <button onclick="setTab('routines')" id="nav-routines" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-full transition-all duration-300">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                        <span class="text-xs font-medium">設定・曜日</span>
+                    </button>
+                    <button onclick="setTab('insights')" id="nav-insights" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-full transition-all duration-300">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><circle cx="12" cy="12" r="5"/></svg>
+                        <span class="text-xs font-medium">記録</span>
+                    </button>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- タスク追加・編集モーダル -->
+    <div id="task-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
+        <div id="task-modal-card" class="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-fade-up max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-5">
+                <h2 id="modal-title" class="font-mincho text-lg font-medium tracking-wide">ルーティーンを追加</h2>
+                <button onclick="closeTaskModal()" class="p-2 rounded-full opacity-60 hover:opacity-100 transition-opacity" aria-label="閉じる">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <form id="task-form" onsubmit="saveTaskForm(event)" class="space-y-5">
+                <input type="hidden" id="edit-task-id">
+
+                <!-- 時間帯選択 -->
+                <div>
+                    <label class="block text-xs font-medium opacity-70 mb-2">時間帯</label>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button type="button" onclick="selectFormPeriod('morning')" id="form-period-morning" class="py-2.5 px-4 rounded-2xl border text-sm font-medium flex items-center justify-center gap-2 transition-all">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
+                            朝のルーティーン
+                        </button>
+                        <button type="button" onclick="selectFormPeriod('night')" id="form-period-night" class="py-2.5 px-4 rounded-2xl border text-sm font-medium flex items-center justify-center gap-2 transition-all">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                            夜のルーティーン
+                        </button>
+                    </div>
+                </div>
+
+                <!-- タイトル -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="task-title-input" class="text-xs font-medium opacity-70">項目名</label>
+                        <span id="voice-hint-task-title" class="text-[11px] opacity-50">「白湯を飲む 5分」のように話せます</span>
+                    </div>
+                    <div class="relative flex items-center">
+                        <input type="text" id="task-title-input" required maxlength="40" placeholder="例：白湯を飲む、ストレッチをする" class="w-full pl-4 pr-12 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 transition-all">
+                        <button type="button" id="voice-btn-task-title" onclick="toggleVoiceInput('task-title-input', { parseDuration: true })" title="音声で入力" aria-label="項目名を音声で入力" class="absolute right-2 p-2 rounded-xl transition-all opacity-75 hover:opacity-100">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 所要時間 -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="task-duration-input" class="text-xs font-medium opacity-70">所要時間（分）</label>
+                        <span class="text-[11px] opacity-55">タイマーの目安になります</span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="number" id="task-duration-input" required min="1" max="180" value="5" class="w-24 px-3.5 py-2.5 rounded-2xl border text-sm font-medium text-center focus:outline-none focus:ring-2">
+                        <span class="text-sm opacity-75">分</span>
+                        <div class="flex-1 flex items-center justify-end gap-1.5 flex-wrap">
+                            <button type="button" onclick="setDurationPreset(3)" class="px-2.5 py-1.5 rounded-xl text-xs border opacity-75 hover:opacity-100 transition-opacity">3分</button>
+                            <button type="button" onclick="setDurationPreset(5)" class="px-2.5 py-1.5 rounded-xl text-xs border opacity-75 hover:opacity-100 transition-opacity">5分</button>
+                            <button type="button" onclick="setDurationPreset(10)" class="px-2.5 py-1.5 rounded-xl text-xs border opacity-75 hover:opacity-100 transition-opacity">10分</button>
+                            <button type="button" onclick="setDurationPreset(15)" class="px-2.5 py-1.5 rounded-xl text-xs border opacity-75 hover:opacity-100 transition-opacity">15分</button>
+                            <button type="button" onclick="setDurationPreset(30)" class="px-2.5 py-1.5 rounded-xl text-xs border opacity-75 hover:opacity-100 transition-opacity">30分</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 実施する曜日 -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-medium opacity-70">実施する曜日</label>
+                        <div class="flex gap-1.5">
+                            <button type="button" onclick="setDayPreset('all')" class="text-[11px] px-2.5 py-0.5 rounded-lg border opacity-75 hover:opacity-100">毎日</button>
+                            <button type="button" onclick="setDayPreset('weekdays')" class="text-[11px] px-2.5 py-0.5 rounded-lg border opacity-75 hover:opacity-100">平日</button>
+                            <button type="button" onclick="setDayPreset('weekends')" class="text-[11px] px-2.5 py-0.5 rounded-lg border opacity-75 hover:opacity-100">週末</button>
+                        </div>
+                    </div>
+                    <div id="form-days-container" class="grid grid-cols-7 gap-1.5"></div>
+                    <p id="days-error" class="text-xs text-rose-500 mt-1.5 hidden">少なくとも1つの曜日を選択してください。</p>
+                </div>
+
+                <!-- メモ（任意） -->
+                <div>
+                    <label for="task-note-input" class="block text-xs font-medium opacity-70 mb-1.5">ひとことメモ（任意）</label>
+                    <div class="relative flex items-center">
+                        <input type="text" id="task-note-input" maxlength="60" placeholder="例：深呼吸しながらゆっくり行う" class="w-full pl-4 pr-12 py-2.5 rounded-2xl border text-sm focus:outline-none focus:ring-2 transition-all">
+                        <button type="button" id="voice-btn-task-note" onclick="toggleVoiceInput('task-note-input')" title="音声で入力" aria-label="メモを音声で入力" class="absolute right-2 p-1.5 rounded-xl transition-all opacity-75 hover:opacity-100">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- アクションボタン -->
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="button" id="delete-task-btn" onclick="confirmDeleteTask()" class="hidden px-4 py-3 rounded-2xl text-sm font-medium text-rose-500 border border-rose-500/30 hover:bg-rose-500/10 transition-colors">
+                        削除
+                    </button>
+                    <button type="submit" id="save-task-btn" class="flex-1 py-3 px-5 rounded-2xl text-sm font-medium text-white shadow-sm transition-all active:scale-[0.98]">
+                        保存する
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 確認ダイアログ（alert/confirm代替） -->
+    <div id="confirm-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/55 backdrop-blur-sm p-4">
+        <div id="confirm-modal-card" class="w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-fade-up text-center space-y-4">
+            <h3 id="confirm-title" class="font-mincho text-base font-medium">確認</h3>
+            <p id="confirm-message" class="text-xs opacity-75 leading-relaxed"></p>
+            <div class="flex gap-2.5 pt-2">
+                <button onclick="closeConfirmModal()" class="flex-1 py-2.5 rounded-2xl border text-xs font-medium opacity-80 hover:opacity-100 transition-opacity">キャンセル</button>
+                <button id="confirm-ok-btn" class="flex-1 py-2.5 rounded-2xl text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 transition-colors">実行</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ホーム画面に追加（PWAインストール）ガイドモーダル -->
+    <div id="install-modal" class="fixed inset-0 z-[60] hidden items-end sm:items-center justify-center bg-black/55 backdrop-blur-sm p-0 sm:p-4">
+        <div id="install-modal-card" class="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-fade-up space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div id="install-icon-preview" class="w-11 h-11 rounded-2xl overflow-hidden shadow-md flex-shrink-0 flex items-center justify-center bg-[#182138]">
+                        <svg class="w-7 h-7" viewBox="0 0 64 64" fill="none">
+                            <circle cx="32" cy="32" r="20" stroke="#DFC58E" stroke-width="2" stroke-opacity="0.6"/>
+                            <path d="M35 18a14 14 0 1 0 11 22 11 11 0 1 1-11-22Z" fill="#DFC58E"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-mincho text-base font-medium">ホーム画面に追加</h3>
+                        <p class="text-[11px] opacity-65">スマホからアプリのようにすぐ起動できます</p>
+                    </div>
+                </div>
+                <button onclick="closeInstallModal()" class="p-2 rounded-full opacity-60 hover:opacity-100 transition-opacity" aria-label="閉じる">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <!-- ワンタップインストールボタン（Android Chrome等でプロンプト利用可能な場合のみ表示） -->
+            <div id="native-install-section" class="hidden">
+                <button id="native-install-btn" onclick="triggerNativeInstall()" class="w-full py-3.5 px-5 rounded-2xl text-sm font-medium text-white shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>この端末のホーム画面に追加する</span>
+                </button>
+            </div>
+
+            <!-- OS別の手順ガイド -->
+            <div id="install-guide-steps" class="space-y-3 text-xs leading-relaxed">
+                <!-- JSでOSに合わせて描画 -->
+            </div>
+
+            <div class="pt-1">
+                <button onclick="closeInstallModal()" class="w-full py-2.5 rounded-2xl border text-xs font-medium opacity-80 hover:opacity-100 transition-opacity">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- タイマー付きガイドモード（Focus Mode オーバーレイ） -->
+    <div id="focus-overlay" class="fixed inset-0 z-50 hidden flex-col justify-between p-6 sm:p-8 transition-colors duration-500 overflow-y-auto">
+        <!-- トップバー -->
+        <div class="max-w-md w-full mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <span id="focus-badge" class="text-[11px] font-medium px-3 py-1 rounded-full tracking-wide">ガイドモード</span>
+                <span id="focus-step-counter" class="font-serif text-sm opacity-65">1 / 5</span>
+            </div>
+            <button onclick="closeFocusMode()" class="p-2.5 rounded-full opacity-70 hover:opacity-100 transition-opacity" aria-label="ガイドモードを終了">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <!-- 中央タイマー＆現在の項目 -->
+        <div class="max-w-md w-full mx-auto flex flex-col items-center text-center my-auto py-6">
+            <p id="focus-period-label" class="font-serif italic text-xs tracking-[0.22em] uppercase opacity-55 mb-2">Morning Ritual</p>
+            <h2 id="focus-task-title" class="font-mincho text-2xl sm:text-3xl font-medium tracking-wide mb-2 px-2">白湯を飲む</h2>
+            <p id="focus-task-note" class="text-xs opacity-65 min-h-[20px] mb-8 px-4"></p>
+
+            <!-- 円形タイマー -->
+            <div class="relative w-64 h-64 flex items-center justify-center mb-8">
+                <svg class="w-full h-full" viewBox="0 0 220 220">
+                    <circle cx="110" cy="110" r="98" fill="none" stroke-width="1" class="opacity-15" stroke="currentColor" stroke-dasharray="3 5" />
+                    <circle id="focus-ring-bg" cx="110" cy="110" r="88" fill="none" stroke-width="5" class="opacity-15" stroke="currentColor" />
+                    <circle id="focus-ring-progress" cx="110" cy="110" r="88" fill="none" stroke-width="5" stroke-linecap="round" class="progress-ring-circle" stroke-dasharray="552.92" stroke-dashoffset="0" />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span id="focus-timer-display" class="font-serif text-6xl font-light tracking-tight tabular-nums">05:00</span>
+                    <span id="focus-timer-status" class="text-[11px] tracking-wider opacity-55 mt-2">タップして開始</span>
+                </div>
+            </div>
+
+            <!-- タイマーコントロール -->
+            <div class="flex items-center justify-center gap-4 mb-6">
+                <button onclick="addOneMinuteFocus()" class="px-4 py-2.5 rounded-full border text-xs font-medium opacity-80 hover:opacity-100 transition-all active:scale-95">
+                    +1分
+                </button>
+                <button id="focus-play-btn" onclick="toggleFocusTimer()" class="w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg transition-transform active:scale-95">
+                </button>
+                <button onclick="skipFocusTask()" class="px-4 py-2.5 rounded-full border text-xs font-medium opacity-80 hover:opacity-100 transition-all active:scale-95">
+                    スキップ
+                </button>
+            </div>
+
+            <!-- 完了して次へボタン -->
+            <button id="focus-complete-btn" onclick="completeCurrentFocusTask()" class="w-full max-w-xs py-3.5 px-6 rounded-full text-sm font-medium text-white shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>完了して次へ</span>
+            </button>
+        </div>
+
+        <!-- 次のタスクプレビュー -->
+        <div class="max-w-md w-full mx-auto text-center pb-2">
+            <div id="focus-next-preview" class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs opacity-75">
+            </div>
+        </div>
+    </div>
+
+    <!-- トースト通知 -->
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-[70] px-5 py-2.5 rounded-full text-xs font-medium shadow-xl opacity-0 pointer-events-none transition-all duration-300 translate-y-[-8px]">
+    </div>
+
+    <script>
+        /* ==========================================================================
+           定数・状態管理 (State Management)
+           ========================================================================== */
+        const STORAGE_KEY = 'sora_tsuki_routine_v1';
+        const DAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
+        const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
+        const MORNING_QUOTES = [
+            '静かな朝の積み重ねが、今日という一日に余白を灯します。',
+            '完璧でなくても大丈夫。まずは最初のひとつを丁寧に。',
+            '深呼吸をして、自分のリズムで今日をはじめましょう。',
+            '小さな習慣が、静かにあなたを支える土台になります。'
+        ];
+        const NIGHT_QUOTES = [
+            '今日も一日お疲れさまでした。心と身体をゆっくりほどきましょう。',
+            '灯りを落とした静かな時間が、深い眠りへと導きます。',
+            'できたことに目を向けて、穏やかに一日を閉じましょう。',
+            '明日の自分のために、今夜を優しく整えておきましょう。'
+        ];
+
+        // 気分オプション（振り返り＆習慣への愛着形成）
+        const MOOD_OPTIONS = [
+            { id: 'calm', label: '穏やか', icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 12c2-3 5-3 7 0s5 3 7 0 5-3 6 0"/><path d="M2 17c2-3 5-3 7 0s5 3 7 0 5-3 6 0"/></svg>' },
+            { id: 'energized', label: '充実', icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>' },
+            { id: 'cozy', label: 'ゆったり', icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>' },
+            { id: 'tired', label: 'お疲れ', icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>' }
+        ];
+
+        let state = {
+            period: 'morning',
+            tab: 'today',
+            soundEnabled: true,
+            routines: [],
+            // history[YYYY-MM-DD]: { morning: string[], night: string[], mood?: string, journal?: string, restDay?: boolean }
+            history: {},
+            routineFilterDay: 'all',
+            calendarYear: new Date().getFullYear(),
+            calendarMonth: new Date().getMonth(),
+            selectedCalendarDate: null
+        };
+
+        let formState = {
+            period: 'morning',
+            days: [0, 1, 2, 3, 4, 5, 6]
+        };
+
+        let focusState = {
+            active: false,
+            queue: [],
+            currentIndex: 0,
+            remainingSec: 0,
+            totalSec: 0,
+            isRunning: false,
+            intervalId: null
+        };
+
+        let pendingConfirmAction = null;
+
+        /* ==========================================================================
+           ユーティリティ関数
+           ========================================================================== */
+        function getDateKey(date = new Date()) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function formatDisplayDate(date = new Date()) {
+            const m = date.getMonth() + 1;
+            const d = date.getDate();
+            const w = DAY_LABELS[date.getDay()];
+            return `${m}月${d}日 (${w})`;
+        }
+
+        function formatDaysSummary(days) {
+            if (!days || days.length === 0) return '設定なし';
+            if (days.length === 7) return '毎日';
+            const sorted = [...days].sort((a, b) => a - b);
+            if (JSON.stringify(sorted) === JSON.stringify([1, 2, 3, 4, 5])) return '平日';
+            if (JSON.stringify(sorted) === JSON.stringify([0, 6])) return '週末';
+            return DAY_ORDER.filter(d => days.includes(d)).map(d => DAY_LABELS[d]).join('・');
+        }
+
+        function formatMinutes(totalMin) {
+            if (totalMin < 60) return `${totalMin}分`;
+            const h = Math.floor(totalMin / 60);
+            const m = totalMin % 60;
+            return m === 0 ? `${h}時間` : `${h}時間${m}分`;
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function ensureDayRecord(dateKey) {
+            if (!state.history[dateKey]) {
+                state.history[dateKey] = { morning: [], night: [] };
+            }
+            if (!Array.isArray(state.history[dateKey].morning)) state.history[dateKey].morning = [];
+            if (!Array.isArray(state.history[dateKey].night)) state.history[dateKey].night = [];
+            return state.history[dateKey];
+        }
+
+        /* ==========================================================================
+           サウンド演出 (Tone.js)
+           ========================================================================== */
+        let synth = null;
+        function ensureAudioReady() {
+            try {
+                if (typeof Tone === 'undefined') return false;
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                if (!synth) {
+                    synth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.03, decay: 0.35, sustain: 0.1, release: 1.4 }
+                    }).toDestination();
+                    synth.volume.value = -11;
+                }
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function playCheckSound() {
+            if (!state.soundEnabled || !ensureAudioReady()) return;
+            try {
+                const now = Tone.now();
+                synth.triggerAttackRelease('E5', '16n', now);
+                synth.triggerAttackRelease('B5', '8n', now + 0.07);
+            } catch (e) {}
+        }
+
+        function playCompleteAllSound() {
+            if (!state.soundEnabled || !ensureAudioReady()) return;
+            try {
+                const now = Tone.now();
+                synth.triggerAttackRelease(['C5', 'E5', 'G5'], '4n', now);
+                synth.triggerAttackRelease(['D5', 'G5', 'B5', 'D6'], '2n', now + 0.24);
+            } catch (e) {}
+        }
+
+        function playTimerEndSound() {
+            if (!state.soundEnabled || !ensureAudioReady()) return;
+            try {
+                const now = Tone.now();
+                synth.triggerAttackRelease('A4', '4n', now);
+                synth.triggerAttackRelease('E5', '2n', now + 0.25);
+            } catch (e) {}
+        }
+
+        /* ==========================================================================
+           データ永続化・初期データ生成
+           ========================================================================== */
+        function createDefaultData() {
+            const routines = [
+                { id: 'm1', title: 'カーテンを開けて朝日を浴びる', period: 'morning', duration: 2, days: [0,1,2,3,4,5,6], note: '体内時計をリセット', order: 0 },
+                { id: 'm2', title: '白湯を一杯ゆっくり飲む', period: 'morning', duration: 5, days: [0,1,2,3,4,5,6], note: '身体を内側から温める', order: 1 },
+                { id: 'm3', title: '軽いストレッチ・深呼吸', period: 'morning', duration: 10, days: [0,1,2,3,4,5,6], note: '肩と背中をほぐす', order: 2 },
+                { id: 'm4', title: '今日の予定と優先タスクを確認', period: 'morning', duration: 5, days: [1,2,3,4,5], note: '平日の大切な3つを決める', order: 3 },
+                { id: 'm5', title: 'ゆっくりコーヒー・お茶を淹れる', period: 'morning', duration: 15, days: [0,6], note: '休日のご褒美時間', order: 4 },
+
+                { id: 'n1', title: 'スマホを充電スポットに置く', period: 'night', duration: 2, days: [0,1,2,3,4,5,6], note: 'デジタルデトックスの合図', order: 0 },
+                { id: 'n2', title: '明日の準備と机のリセット', period: 'night', duration: 5, days: [0,1,2,3,4], note: '翌朝の自分に余白を残す', order: 1 },
+                { id: 'n3', title: '温かい飲み物とスキンケア', period: 'night', duration: 10, days: [0,1,2,3,4,5,6], note: '一日の疲れを労わる', order: 2 },
+                { id: 'n4', title: '読書または3行日記', period: 'night', duration: 15, days: [0,1,2,3,4,5,6], note: '今日よかったことを思い出す', order: 3 },
+                { id: 'n5', title: '湯船に浸かってリラックス', period: 'night', duration: 20, days: [5,6], note: '週末の丁寧なケア', order: 4 }
+            ];
+
+            // 過去4日分の豊かなサンプル記録（振り返り＆カレンダーをすぐ体験できるように）
+            const history = {};
+            const today = new Date();
+            const sampleJournals = [
+                { mood: 'calm', journal: '朝の白湯と深呼吸のおかげで、午前中ずっと頭が冴えていた。' },
+                { mood: 'cozy', journal: '少し疲れていたけれど、スマホを早めに手放して本を読めた。' },
+                { mood: 'energized', journal: '朝も夜もリズムよく整えられた一日。' },
+                { mood: 'calm', journal: 'ゆっくりストレッチするだけで気持ちが軽くなる。' }
+            ];
+
+            for (let offset = 1; offset <= 4; offset++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - offset);
+                const key = getDateKey(d);
+                const dow = d.getDay();
+                const morningIds = routines.filter(r => r.period === 'morning' && r.days.includes(dow)).map(r => r.id);
+                const nightIds = routines.filter(r => r.period === 'night' && r.days.includes(dow)).map(r => r.id);
+                const sample = sampleJournals[offset - 1];
+                history[key] = {
+                    morning: morningIds,
+                    night: offset === 2 ? nightIds.slice(0, Math.max(1, nightIds.length - 1)) : nightIds,
+                    mood: sample.mood,
+                    journal: sample.journal,
+                    restDay: false
+                };
+            }
+
+            return { routines, history };
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    state.routines = Array.isArray(parsed.routines) ? parsed.routines : [];
+                    state.history = parsed.history || {};
+                    state.soundEnabled = parsed.soundEnabled !== undefined ? parsed.soundEnabled : true;
+                } else {
+                    const defaults = createDefaultData();
+                    state.routines = defaults.routines;
+                    state.history = defaults.history;
+                    saveState();
+                }
+            } catch (e) {
+                const defaults = createDefaultData();
+                state.routines = defaults.routines;
+                state.history = defaults.history;
+            }
+
+            const hour = new Date().getHours();
+            state.period = (hour >= 4 && hour < 16) ? 'morning' : 'night';
+            state.selectedCalendarDate = getDateKey(new Date());
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    routines: state.routines,
+                    history: state.history,
+                    soundEnabled: state.soundEnabled
+                }));
+            } catch (e) {
+                showToast('データの保存に失敗しました');
+            }
+        }
+
+        /* ==========================================================================
+           ロジックヘルパー（達成計算・優しいストリーク・マイルストーン）
+           ========================================================================== */
+        function getTasksForDate(period, date = new Date()) {
+            const dow = date.getDay();
+            return state.routines
+                .filter(r => r.period === period && r.days.includes(dow))
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        }
+
+        function getCompletedIds(period, dateKey = getDateKey()) {
+            return (state.history[dateKey] && Array.isArray(state.history[dateKey][period]))
+                ? state.history[dateKey][period]
+                : [];
+        }
+
+        function isRestDay(dateKey) {
+            return Boolean(state.history[dateKey] && state.history[dateKey].restDay);
+        }
+
+        function getCompletionRateForDate(period, date) {
+            const tasks = getTasksForDate(period, date);
+            if (tasks.length === 0) return null;
+            const completed = getCompletedIds(period, getDateKey(date));
+            const doneCount = tasks.filter(t => completed.includes(t.id)).length;
+            return doneCount / tasks.length;
+        }
+
+        function isPeriodFullyCompleted(period, date = new Date()) {
+            const tasks = getTasksForDate(period, date);
+            if (tasks.length === 0) return false;
+            const completed = getCompletedIds(period, getDateKey(date));
+            return tasks.every(t => completed.includes(t.id));
+        }
+
+        // 「長続きする工夫」: 1つ以上達成（スモールステップ）または「お休み日」で継続の灯火が途切れない優しいストリーク
+        function calculateGentleStreak(period) {
+            let streak = 0;
+            const today = new Date();
+            let checkDate = new Date(today);
+            const todayKey = getDateKey(checkDate);
+
+            // 今日がまだ未着手かつお休み日でもないなら昨日から数える
+            const todayDoneCount = getCompletedIds(period, todayKey).length;
+            if (todayDoneCount === 0 && !isRestDay(todayKey)) {
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+
+            for (let i = 0; i < 365; i++) {
+                const key = getDateKey(checkDate);
+                if (isRestDay(key)) {
+                    // お休み日はカウントを増やさず、連続を途切れさせない
+                    checkDate.setDate(checkDate.getDate() - 1);
+                    continue;
+                }
+                const tasks = getTasksForDate(period, checkDate);
+                if (tasks.length === 0) {
+                    checkDate.setDate(checkDate.getDate() - 1);
+                    continue;
+                }
+                const doneCount = getCompletedIds(period, key).filter(id => tasks.some(t => t.id === id)).length;
+                if (doneCount > 0) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+            return streak;
+        }
+
+        function calculateInsightsStats() {
+            const today = new Date();
+            let totalCompletedTasks = 0;
+            let totalInvestedMinutes = 0;
+            let perfectDaysCount = 0;
+            let activeDaysTotal = 0;
+
+            const routineMap = new Map(state.routines.map(r => [r.id, r]));
+
+            // 曜日別の達成率集計（過去30日）
+            const dowTotals = Array(7).fill(0);
+            const dowCompleted = Array(7).fill(0);
+
+            for (let offset = 0; offset < 30; offset++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - offset);
+                const dow = d.getDay();
+                const key = getDateKey(d);
+                if (isRestDay(key)) continue;
+
+                ['morning', 'night'].forEach(p => {
+                    const tasks = getTasksForDate(p, d);
+                    const done = getCompletedIds(p, key).filter(id => tasks.some(t => t.id === id)).length;
+                    dowTotals[dow] += tasks.length;
+                    dowCompleted[dow] += done;
+                });
+            }
+
+            // 過去14日間のリズムデータ
+            const recent14 = [];
+            for (let offset = 13; offset >= 0; offset--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - offset);
+                const key = getDateKey(d);
+                recent14.push({
+                    key,
+                    dayLabel: DAY_LABELS[d.getDay()],
+                    dateNum: d.getDate(),
+                    mRate: getCompletionRateForDate('morning', d) || 0,
+                    nRate: getCompletionRateForDate('night', d) || 0,
+                    rest: isRestDay(key)
+                });
+            }
+
+            // 全履歴の集計
+            const journalEntries = [];
+            Object.entries(state.history).forEach(([key, val]) => {
+                const mList = Array.isArray(val.morning) ? val.morning : [];
+                const nList = Array.isArray(val.night) ? val.night : [];
+                totalCompletedTasks += mList.length + nList.length;
+
+                [...mList, ...nList].forEach(id => {
+                    const r = routineMap.get(id);
+                    totalInvestedMinutes += r ? (Number(r.duration) || 5) : 5;
+                });
+
+                if (mList.length > 0 || nList.length > 0) activeDaysTotal++;
+
+                const [y, m, day] = key.split('-').map(Number);
+                if (y && m && day) {
+                    const dObj = new Date(y, m - 1, day);
+                    if (isPeriodFullyCompleted('morning', dObj) && isPeriodFullyCompleted('night', dObj)) {
+                        perfectDaysCount++;
+                    }
+                    if (val.mood || (val.journal && val.journal.trim())) {
+                        journalEntries.push({
+                            key,
+                            dateLabel: `${m}月${day}日 (${DAY_LABELS[dObj.getDay()]})`,
+                            mood: val.mood || null,
+                            journal: val.journal || ''
+                        });
+                    }
+                }
+            });
+
+            journalEntries.sort((a, b) => b.key.localeCompare(a.key));
+
+            const morningStreak = calculateGentleStreak('morning');
+            const nightStreak = calculateGentleStreak('night');
+            const maxStreak = Math.max(morningStreak, nightStreak);
+
+            // 光のしるし（マイルストーン）
+            const milestones = [
+                {
+                    id: 'first_step',
+                    title: 'はじめの一歩',
+                    desc: '最初のルーティーンを完了',
+                    unlocked: totalCompletedTasks >= 1,
+                    svg: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>'
+                },
+                {
+                    id: 'three_days',
+                    title: '三日月のリズム',
+                    desc: '3日以上つづける',
+                    unlocked: maxStreak >= 3 || activeDaysTotal >= 3,
+                    svg: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>'
+                },
+                {
+                    id: 'one_hour',
+                    title: '1時間の静寂',
+                    desc: '累計60分以上を整える',
+                    unlocked: totalInvestedMinutes >= 60,
+                    svg: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>'
+                },
+                {
+                    id: 'harmony',
+                    title: '朝と夜の調和',
+                    desc: '朝・夜どちらも完全達成',
+                    unlocked: perfectDaysCount >= 1,
+                    svg: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" opacity="0.25"/>'
+                },
+                {
+                    id: 'seven_days',
+                    title: '満ちる一週間',
+                    desc: '7日間つづける',
+                    unlocked: maxStreak >= 7 || activeDaysTotal >= 7,
+                    svg: '<polygon points="12 2 15 9 22 9.5 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.5 9 9 12 2"/>'
+                }
+            ];
+
+            return {
+                morningStreak,
+                nightStreak,
+                totalCompletedTasks,
+                totalInvestedMinutes,
+                perfectDaysCount,
+                activeDaysTotal,
+                recent14,
+                journalEntries: journalEntries.slice(0, 6),
+                milestones,
+                dowRates: dowTotals.map((tot, i) => tot > 0 ? Math.round((dowCompleted[i] / tot) * 100) : 0)
+            };
+        }
+
+        /* ==========================================================================
+           テーマ＆アンビエント空間適用
+           ========================================================================== */
+        function getThemeClasses() {
+            const isMorning = state.period === 'morning';
+            return {
+                isMorning,
+                bodyBg: isMorning ? 'bg-morning-bg text-morning-text' : 'bg-night-bg text-night-text',
+                headerBg: isMorning ? 'bg-morning-bg/70 backdrop-blur-xl' : 'bg-night-bg/70 backdrop-blur-xl',
+                card: isMorning ? 'glass-morning' : 'glass-night',
+                subtleBg: isMorning ? 'bg-morning-subtle' : 'bg-night-subtle',
+                border: isMorning ? 'border-stone-300/60' : 'border-slate-700/60',
+                muted: isMorning ? 'text-morning-muted' : 'text-night-muted',
+                accentText: isMorning ? 'text-morning-accent' : 'text-night-accent',
+                accentBg: isMorning
+                    ? 'bg-gradient-to-r from-[#C27135] to-[#D68D4A] hover:brightness-105'
+                    : 'bg-gradient-to-r from-[#6D7EF2] to-[#8D9CFF] hover:brightness-110',
+                accentSolid: isMorning ? 'bg-morning-accent' : 'bg-indigo-400',
+                accentSoft: isMorning ? 'bg-morning-accentSoft text-morning-accent' : 'bg-night-accentSoft text-night-accent',
+                accentStroke: isMorning ? '#C8793B' : '#94A6FF',
+                input: isMorning
+                    ? 'bg-white/80 border-stone-200/90 text-stone-800 focus:ring-amber-500/25 focus:border-amber-600'
+                    : 'bg-slate-900/70 border-slate-700/80 text-slate-100 focus:ring-indigo-400/25 focus:border-indigo-400',
+                navBg: isMorning ? 'glass-morning' : 'glass-night'
+            };
+        }
+
+        function applyTheme() {
+            const t = getThemeClasses();
+            document.body.className = `min-h-screen antialiased relative ${t.bodyBg}`;
+
+            // 背景アンビエントオーブの色を朝・夜で滑らかに変化
+            const orbTop = document.getElementById('orb-top');
+            const orbBottom = document.getElementById('orb-bottom');
+            if (t.isMorning) {
+                orbTop.style.background = 'radial-gradient(circle, rgba(242, 188, 128, 0.42) 0%, rgba(246, 242, 235, 0) 70%)';
+                orbBottom.style.background = 'radial-gradient(circle, rgba(212, 198, 174, 0.38) 0%, rgba(246, 242, 235, 0) 70%)';
+            } else {
+                orbTop.style.background = 'radial-gradient(circle, rgba(99, 118, 224, 0.28) 0%, rgba(9, 13, 24, 0) 70%)';
+                orbBottom.style.background = 'radial-gradient(circle, rgba(168, 138, 92, 0.16) 0%, rgba(9, 13, 24, 0) 70%)';
+            }
+
+            // ヘッダー
+            const header = document.getElementById('main-header');
+            header.className = `sticky top-0 z-30 px-5 safe-top pb-3 transition-colors duration-500 ${t.headerBg}`;
+            document.getElementById('header-greeting').textContent = t.isMorning ? 'Good Morning' : 'Good Evening';
+            document.getElementById('header-date').textContent = formatDisplayDate(new Date());
+
+            // ステータスバーのテーマカラーを朝・夜に同期
+            const themeColorMeta = document.getElementById('meta-theme-color');
+            if (themeColorMeta) {
+                themeColorMeta.setAttribute('content', t.isMorning ? '#F6F2EB' : '#090D18');
+            }
+
+            // ホーム画面追加ボタンのスタイル（スタンドアロン起動中なら非表示）
+            const installBtn = document.getElementById('install-app-btn');
+            if (installBtn) {
+                if (isStandaloneMode()) {
+                    installBtn.classList.add('hidden');
+                } else {
+                    installBtn.className = `p-2.5 rounded-full transition-all duration-200 ${t.subtleBg} ${t.muted} hover:opacity-100`;
+                }
+            }
+
+            // 朝・夜スイッチャー
+            const switcher = document.getElementById('period-switcher');
+            switcher.className = `flex p-1 rounded-full border transition-all duration-300 ${t.subtleBg} ${t.border}`;
+
+            const btnMorning = document.getElementById('btn-period-morning');
+            const btnNight = document.getElementById('btn-period-night');
+            if (t.isMorning) {
+                btnMorning.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-white text-morning-accent shadow-sm transition-all duration-300';
+                btnNight.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-morning-muted hover:text-morning-text transition-all duration-300';
+            } else {
+                btnMorning.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-night-muted hover:text-night-text transition-all duration-300';
+                btnNight.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-slate-700/80 text-indigo-200 shadow-sm transition-all duration-300';
+            }
+
+            // サウンドボタン
+            const soundBtn = document.getElementById('sound-toggle-btn');
+            soundBtn.className = `p-2.5 rounded-full transition-all duration-200 ${t.subtleBg} ${t.muted} hover:opacity-100`;
+            soundBtn.innerHTML = state.soundEnabled
+                ? `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`
+                : `<svg class="w-4 h-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`;
+
+            // ボトムナビ
+            const nav = document.getElementById('bottom-nav');
+            nav.className = `max-w-md mx-auto rounded-full px-2 py-1.5 pointer-events-auto transition-all duration-500 ${t.navBg}`;
+
+            ['today', 'routines', 'insights'].forEach(tabId => {
+                const el = document.getElementById(`nav-${tabId}`);
+                if (state.tab === tabId) {
+                    el.className = `flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full transition-all duration-300 text-white shadow-sm ${t.accentBg}`;
+                } else {
+                    el.className = `flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full transition-all duration-300 ${t.muted} hover:opacity-100`;
+                }
+            });
+        }
+
+        /* ==========================================================================
+           クリエイティブSVGアートワーク：進捗で昇る太陽 / 満ちる月
+           ========================================================================== */
+        function renderCelestialArtwork(progress, isMorning) {
+            // 太陽は progress 0→1 で y=74 から y=34 へ上昇し、光輪が広がる
+            if (isMorning) {
+                const sunY = 72 - progress * 36;
+                const haloR = 20 + progress * 18;
+                const haloOpacity = 0.14 + progress * 0.28;
+                return `
+                    <svg class="w-24 h-24 flex-shrink-0" viewBox="0 0 100 100">
+                        <defs>
+                            <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#E59A4E" stop-opacity="0.7"/>
+                                <stop offset="100%" stop-color="#E59A4E" stop-opacity="0"/>
+                            </radialGradient>
+                            <clipPath id="horizonClip">
+                                <rect x="0" y="0" width="100" height="74" rx="16"/>
+                            </clipPath>
+                        </defs>
+                        <!-- 外枠の繊細な円弧 -->
+                        <circle cx="50" cy="50" r="46" fill="none" stroke="#C8793B" stroke-opacity="0.18" stroke-width="1" stroke-dasharray="2 4"/>
+                        <!-- 進捗リング -->
+                        <circle cx="50" cy="50" r="42" fill="none" stroke="#C8793B" stroke-opacity="0.12" stroke-width="2.5"/>
+                        <circle cx="50" cy="50" r="42" fill="none" stroke="#C8793B" stroke-width="2.5" stroke-linecap="round"
+                            class="progress-ring-circle" stroke-dasharray="263.89" stroke-dashoffset="${263.89 * (1 - progress)}"/>
+                        <!-- 地平線より上に昇る太陽 -->
+                        <g clip-path="url(#horizonClip)">
+                            <circle cx="50" cy="${sunY}" r="${haloR}" fill="url(#sunGlow)" opacity="${haloOpacity}" class="celestial-transition"/>
+                            <circle cx="50" cy="${sunY}" r="14" fill="#D58640" class="celestial-transition"/>
+                        </g>
+                        <!-- 地平線 -->
+                        <line x1="20" y1="74" x2="80" y2="74" stroke="#B68E68" stroke-width="1.2" stroke-opacity="0.5" stroke-linecap="round"/>
+                        <text x="50" y="88" text-anchor="middle" font-size="10" fill="#787067" class="font-serif">${Math.round(progress * 100)}%</text>
+                    </svg>
+                `;
+            } else {
+                // 夜は progress 0→1 で三日月が満月へと満ちていく
+                const shadowOffset = 10 + progress * 24;
+                const glowOpacity = 0.15 + progress * 0.35;
+                return `
+                    <svg class="w-24 h-24 flex-shrink-0" viewBox="0 0 100 100">
+                        <defs>
+                            <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#DFC58E" stop-opacity="0.55"/>
+                                <stop offset="100%" stop-color="#90A2FF" stop-opacity="0"/>
+                            </radialGradient>
+                            <mask id="moonPhaseMask">
+                                <rect x="0" y="0" width="100" height="100" fill="black"/>
+                                <circle cx="50" cy="46" r="16" fill="white"/>
+                                <circle cx="${50 + shadowOffset}" cy="42" r="15" fill="black" class="celestial-transition"/>
+                            </mask>
+                        </defs>
+                        <circle cx="50" cy="50" r="46" fill="none" stroke="#90A2FF" stroke-opacity="0.2" stroke-width="1" stroke-dasharray="2 4"/>
+                        <circle cx="50" cy="50" r="42" fill="none" stroke="#90A2FF" stroke-opacity="0.14" stroke-width="2.5"/>
+                        <circle cx="50" cy="50" r="42" fill="none" stroke="#90A2FF" stroke-width="2.5" stroke-linecap="round"
+                            class="progress-ring-circle" stroke-dasharray="263.89" stroke-dashoffset="${263.89 * (1 - progress)}"/>
+                        <!-- 星々 -->
+                        <circle cx="28" cy="34" r="1.2" fill="#DFC58E" class="star-twinkle"/>
+                        <circle cx="72" cy="30" r="1.4" fill="#C7D2FE" class="star-twinkle" style="animation-delay: 1.1s"/>
+                        <circle cx="68" cy="62" r="1" fill="#DFC58E" class="star-twinkle" style="animation-delay: 2.1s"/>
+                        <!-- 月光と満ち欠け -->
+                        <circle cx="50" cy="46" r="28" fill="url(#moonGlow)" opacity="${glowOpacity}" class="celestial-transition"/>
+                        <circle cx="50" cy="46" r="16" fill="#E8D3A2" mask="url(#moonPhaseMask)"/>
+                        <text x="50" y="84" text-anchor="middle" font-size="10" fill="#8E9BB5" class="font-serif">${Math.round(progress * 100)}%</text>
+                    </svg>
+                `;
+            }
+        }
+
+        /* ==========================================================================
+           描画エンジン (Render Views)
+           ========================================================================== */
+        function render() {
+            applyTheme();
+            const main = document.getElementById('main-content');
+            if (state.tab === 'today') {
+                main.innerHTML = renderTodayView();
+            } else if (state.tab === 'routines') {
+                main.innerHTML = renderRoutinesView();
+            } else if (state.tab === 'insights') {
+                main.innerHTML = renderInsightsView();
+            }
+        }
+
+        // 1. 「今日」タブ
+        function renderTodayView() {
+            const t = getThemeClasses();
+            const today = new Date();
+            const todayKey = getDateKey(today);
+            const tasks = getTasksForDate(state.period, today);
+            const completedIds = getCompletedIds(state.period, todayKey);
+            const completedCount = tasks.filter(task => completedIds.includes(task.id)).length;
+            const totalCount = tasks.length;
+            const progress = totalCount > 0 ? completedCount / totalCount : 0;
+            const totalDuration = tasks.reduce((sum, task) => sum + (Number(task.duration) || 0), 0);
+            const remainingDuration = tasks
+                .filter(task => !completedIds.includes(task.id))
+                .reduce((sum, task) => sum + (Number(task.duration) || 0), 0);
+
+            const streak = calculateGentleStreak(state.period);
+            const quotes = t.isMorning ? MORNING_QUOTES : NIGHT_QUOTES;
+            const dailyQuote = quotes[today.getDate() % quotes.length];
+            const isAllDone = totalCount > 0 && completedCount === totalCount;
+            const todayRec = state.history[todayKey] || {};
+            const todayRest = Boolean(todayRec.restDay);
+
+            return `
+                <div class="space-y-5 animate-fade-up">
+                    <!-- ヒーロー天体サマリーカード -->
+                    <section class="rounded-[28px] p-5 sm:p-6 ${t.card} relative overflow-hidden">
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                    <span class="text-[11px] font-medium px-2.5 py-1 rounded-full tracking-wide ${t.accentSoft}">
+                                        ${t.isMorning ? '朝の整え' : '夜のほどき'}
+                                    </span>
+                                    ${streak > 0 ? `
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full ${t.subtleBg}">
+                                            <span class="w-1.5 h-1.5 rounded-full ${t.accentSolid}"></span>
+                                            <span>${streak}日継続中</span>
+                                        </span>
+                                    ` : ''}
+                                </div>
+                                <h2 class="font-mincho text-xl font-medium tracking-wide leading-snug">
+                                    ${todayRest
+                                        ? '今日はゆっくり休む日'
+                                        : isAllDone
+                                            ? (t.isMorning ? '朝の光が整いました' : '静かな夜が満ちました')
+                                            : totalCount === 0
+                                                ? '今日の予定はありません'
+                                                : `あと ${totalCount - completedCount} 項目`
+                                    }
+                                </h2>
+                                <p class="text-xs ${t.muted} mt-1.5 leading-relaxed">${dailyQuote}</p>
+                            </div>
+
+                            <!-- 動的SVG天体アート -->
+                            ${renderCelestialArtwork(progress, t.isMorning)}
+                        </div>
+
+                        <!-- アクションバー -->
+                        ${totalCount > 0 ? `
+                            <div class="mt-4 pt-4 border-t ${t.border} flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-1.5 text-xs ${t.muted}">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    <span>${isAllDone ? `合計 ${formatMinutes(totalDuration)} 完了` : `残り目安 ${formatMinutes(remainingDuration)}`}</span>
+                                </div>
+                                ${!isAllDone ? `
+                                    <button onclick="startFocusMode()" class="px-4 py-2 rounded-full text-xs font-medium text-white shadow-sm transition-all active:scale-[0.97] flex items-center gap-1.5 ${t.accentBg}">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                        <span>ガイド開始</span>
+                                    </button>
+                                ` : `
+                                    <span class="text-xs font-medium ${t.accentText} flex items-center gap-1">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                        すべて完了
+                                    </span>
+                                `}
+                            </div>
+                        ` : ''}
+                    </section>
+
+                    <!-- チェックリストセクション -->
+                    <section class="space-y-2.5">
+                        <div class="flex items-center justify-between px-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-xs font-medium tracking-wider ${t.muted}">
+                                    ${DAY_LABELS[today.getDay()]}曜日のリスト
+                                </h3>
+                                <span class="font-serif text-xs ${t.muted}">${completedCount} / ${totalCount}</span>
+                            </div>
+                            <button onclick="openTaskModal(null)" class="text-xs font-medium ${t.accentText} hover:opacity-80 flex items-center gap-1 transition-opacity">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                <span>追加</span>
+                            </button>
+                        </div>
+
+                        ${totalCount === 0 ? `
+                            <div class="rounded-3xl p-8 text-center ${t.card} space-y-3">
+                                <p class="text-sm ${t.muted}">この曜日の${t.isMorning ? '朝' : '夜'}のルーティーンはまだありません。</p>
+                                <button onclick="openTaskModal(null)" class="px-5 py-2.5 rounded-full text-xs font-medium text-white ${t.accentBg}">
+                                    最初の項目を追加する
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="space-y-2.5">
+                                ${tasks.map(task => {
+                                    const done = completedIds.includes(task.id);
+                                    return `
+                                        <div class="group rounded-2xl p-4 flex items-center gap-3.5 transition-all duration-300 ${t.card} ${done ? 'opacity-60' : ''}">
+                                            <!-- チェックボタン -->
+                                            <button onclick="toggleTaskCompletion('${task.id}')" class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 border-[1.5px] transition-all duration-200 ${done ? `${t.accentBg} border-transparent text-white animate-check` : `${t.border} hover:border-current`}" aria-label="${escapeHtml(task.title)}を完了にする">
+                                                ${done ? `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+                                            </button>
+
+                                            <!-- テキスト情報 -->
+                                            <div onclick="toggleTaskCompletion('${task.id}')" class="flex-1 min-w-0 cursor-pointer select-none">
+                                                <div class="text-sm font-medium truncate transition-all ${done ? 'line-through opacity-70' : ''}">${escapeHtml(task.title)}</div>
+                                                <div class="flex items-center gap-2 mt-1 text-[11px] ${t.muted}">
+                                                    <span class="inline-flex items-center gap-1 font-serif text-xs">
+                                                        ${task.duration} min
+                                                    </span>
+                                                    ${task.note ? `<span class="truncate opacity-80">· ${escapeHtml(task.note)}</span>` : ''}
+                                                </div>
+                                            </div>
+
+                                            <!-- 個別タイマー開始 -->
+                                            ${!done ? `
+                                                <button onclick="startFocusMode('${task.id}')" title="この項目からタイマーを開始" class="p-2 rounded-full ${t.subtleBg} ${t.muted} hover:opacity-100 transition-all flex-shrink-0" aria-label="タイマー開始">
+                                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `}
+                    </section>
+
+                    <!-- 今日の気分＆ちいさな振り返り（習慣に愛着を生む仕組み） -->
+                    <section class="rounded-[24px] p-5 ${t.card} space-y-3.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium tracking-wide ${t.muted}">今日の気分とひとこと</span>
+                            <span id="voice-status-today-journal" class="text-[11px] ${todayRec.mood ? t.accentText : 'opacity-45'}">${todayRec.mood ? '記録済み' : '音声入力対応'}</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2">
+                            ${MOOD_OPTIONS.map(m => {
+                                const selected = todayRec.mood === m.id;
+                                return `
+                                    <button onclick="setDayMood('${todayKey}', '${m.id}')" class="py-2.5 px-1 rounded-2xl border flex flex-col items-center gap-1 text-[11px] transition-all ${selected ? `${t.accentSoft} border-current font-medium` : `${t.border} ${t.muted} hover:opacity-100`}">
+                                        ${m.icon}
+                                        <span>${m.label}</span>
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1 flex items-center">
+                                <input type="text" id="today-journal-input" value="${escapeHtml(todayRec.journal || '')}" maxlength="80" placeholder="今日の小さな気づきを残す…" class="w-full pl-3.5 pr-10 py-2.5 rounded-xl border text-xs focus:outline-none focus:ring-2 transition-all ${t.input}">
+                                <button type="button" id="voice-btn-today-journal" onclick="toggleVoiceInput('today-journal-input', { autoSaveJournalDate: '${todayKey}' })" title="音声で入力" aria-label="今日のひとことを音声で入力" class="absolute right-1.5 p-1.5 rounded-lg transition-all ${t.muted} hover:opacity-100">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                                </button>
+                            </div>
+                            <button onclick="saveDayJournal('${todayKey}', 'today-journal-input')" class="px-3.5 py-2.5 rounded-xl text-xs font-medium ${t.subtleBg} hover:opacity-100 transition-opacity flex-shrink-0">保存</button>
+                        </div>
+                    </section>
+                </div>
+            `;
+        }
+
+        // 2. 「設定・曜日」タブ
+        function renderRoutinesView() {
+            const t = getThemeClasses();
+            const periodRoutines = state.routines
+                .filter(r => r.period === state.period)
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+            const filtered = state.routineFilterDay === 'all'
+                ? periodRoutines
+                : periodRoutines.filter(r => r.days.includes(Number(state.routineFilterDay)));
+
+            const totalDuration = filtered.reduce((s, r) => s + (Number(r.duration) || 0), 0);
+
+            return `
+                <div class="space-y-5 animate-fade-up">
+                    <!-- ヘッダー -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="font-mincho text-lg font-medium">${t.isMorning ? '朝' : '夜'}のルーティーン設計</h2>
+                            <p class="text-xs ${t.muted} mt-0.5">曜日ごとのリズムと所要時間を整えます</p>
+                        </div>
+                        <button onclick="openTaskModal(null)" class="px-4 py-2.5 rounded-full text-xs font-medium text-white shadow-sm transition-all active:scale-95 flex items-center gap-1.5 ${t.accentBg}">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span>追加</span>
+                        </button>
+                    </div>
+
+                    <!-- 曜日フィルター -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+                        <button onclick="setRoutineFilter('all')" class="px-3.5 py-2 rounded-full text-xs font-medium flex-shrink-0 transition-all ${state.routineFilterDay === 'all' ? `${t.accentBg} text-white shadow-sm` : `${t.card} ${t.muted}`}">
+                            すべて
+                        </button>
+                        ${DAY_ORDER.map(dayIdx => {
+                            const active = state.routineFilterDay === String(dayIdx);
+                            return `
+                                <button onclick="setRoutineFilter('${dayIdx}')" class="w-9 h-9 rounded-full text-xs font-medium flex-shrink-0 transition-all flex items-center justify-center ${active ? `${t.accentBg} text-white shadow-sm` : `${t.card} ${t.muted}`}">
+                                    ${DAY_LABELS[dayIdx]}
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+
+                    <!-- 合計時間バー -->
+                    <div class="flex items-center justify-between px-1 text-xs ${t.muted}">
+                        <span>${state.routineFilterDay === 'all' ? '登録項目' : `${DAY_LABELS[Number(state.routineFilterDay)]}曜日の項目`} · ${filtered.length}件</span>
+                        <span>合計目安 <strong class="font-medium opacity-95">${formatMinutes(totalDuration)}</strong></span>
+                    </div>
+
+                    <!-- リスト -->
+                    ${filtered.length === 0 ? `
+                        <div class="rounded-3xl p-8 text-center ${t.card}">
+                            <p class="text-sm ${t.muted}">該当するルーティーンがありません。</p>
+                        </div>
+                    ` : `
+                        <div class="space-y-2.5">
+                            ${filtered.map((task, idx) => `
+                                <div class="rounded-2xl p-4 flex items-center gap-3 ${t.card}">
+                                    ${state.routineFilterDay === 'all' ? `
+                                        <div class="flex flex-col gap-0.5 flex-shrink-0">
+                                            <button onclick="moveRoutine('${task.id}', -1)" ${idx === 0 ? 'disabled' : ''} class="p-1 rounded-md ${idx === 0 ? 'opacity-20 cursor-not-allowed' : `${t.muted} hover:opacity-100`}" aria-label="上へ移動">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+                                            </button>
+                                            <button onclick="moveRoutine('${task.id}', 1)" ${idx === filtered.length - 1 ? 'disabled' : ''} class="p-1 rounded-md ${idx === filtered.length - 1 ? 'opacity-20 cursor-not-allowed' : `${t.muted} hover:opacity-100`}" aria-label="下へ移動">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                            </button>
+                                        </div>
+                                    ` : ''}
+
+                                    <div onclick="openTaskModal('${task.id}')" class="flex-1 min-w-0 cursor-pointer">
+                                        <div class="text-sm font-medium truncate">${escapeHtml(task.title)}</div>
+                                        <div class="flex items-center flex-wrap gap-2 mt-1.5">
+                                            <span class="text-[11px] px-2.5 py-0.5 rounded-full font-medium ${t.accentSoft}">${task.duration}分</span>
+                                            <span class="text-[11px] px-2.5 py-0.5 rounded-full ${t.subtleBg} ${t.muted}">${formatDaysSummary(task.days)}</span>
+                                        </div>
+                                    </div>
+
+                                    <button onclick="openTaskModal('${task.id}')" class="p-2.5 rounded-full ${t.subtleBg} ${t.muted} hover:opacity-100 transition-opacity flex-shrink-0" aria-label="編集">
+                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        // 3. 「記録」タブ（クリエイティブデザイン＆長続きする工夫を凝縮）
+        function renderInsightsView() {
+            const t = getThemeClasses();
+            const stats = calculateInsightsStats();
+            const year = state.calendarYear;
+            const month = state.calendarMonth;
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+            const startPad = firstDayOfMonth.getDay();
+            const daysInMonth = lastDayOfMonth.getDate();
+            const todayKey = getDateKey(new Date());
+
+            // 天体カレンダーセル生成
+            let calendarCells = '';
+            for (let i = 0; i < startPad; i++) {
+                calendarCells += `<div class="h-12"></div>`;
+            }
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dObj = new Date(year, month, day);
+                const key = getDateKey(dObj);
+                const mRate = getCompletionRateForDate('morning', dObj) || 0;
+                const nRate = getCompletionRateForDate('night', dObj) || 0;
+                const rest = isRestDay(key);
+                const isToday = key === todayKey;
+                const isSelected = key === state.selectedCalendarDate;
+                const isPerfect = mRate === 1 && nRate === 1;
+
+                // 朝（琥珀色）と夜（月光色）の半円アーク表現
+                const mOpacity = mRate === 1 ? 1 : (mRate > 0 ? 0.45 : 0);
+                const nOpacity = nRate === 1 ? 1 : (nRate > 0 ? 0.45 : 0);
+
+                calendarCells += `
+                    <button onclick="selectCalendarDate('${key}')" class="relative h-12 rounded-2xl flex flex-col items-center justify-center transition-all ${isSelected ? `${t.accentSoft} ring-1 ring-current` : (isToday ? `${t.subtleBg}` : 'hover:opacity-80')}">
+                        <div class="relative w-8 h-8 flex items-center justify-center">
+                            <svg class="w-8 h-8 absolute inset-0" viewBox="0 0 36 36">
+                                ${rest ? `
+                                    <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="2 3"/>
+                                ` : `
+                                    ${mOpacity > 0 ? `<path d="M 18 4 A 14 14 0 0 1 18 32" fill="none" stroke="#D98A3C" stroke-width="${isPerfect ? 2.4 : 2}" stroke-linecap="round" stroke-opacity="${mOpacity}"/>` : ''}
+                                    ${nOpacity > 0 ? `<path d="M 18 32 A 14 14 0 0 1 18 4" fill="none" stroke="#8E9FFF" stroke-width="${isPerfect ? 2.4 : 2}" stroke-linecap="round" stroke-opacity="${nOpacity}"/>` : ''}
+                                `}
+                            </svg>
+                            <span class="text-xs tabular-nums ${isToday || isSelected ? 'font-semibold' : 'opacity-85'}">${day}</span>
+                        </div>
+                        ${rest ? `<span class="text-[8px] opacity-60 leading-none">休</span>` : `<span class="h-1"></span>`}
+                    </button>
+                `;
+            }
+
+            // 選択日の詳細ジャーナル＆お休みパス切替
+            let selectedDetailHtml = '';
+            if (state.selectedCalendarDate) {
+                const key = state.selectedCalendarDate;
+                const [sy, sm, sd] = key.split('-').map(Number);
+                const sDate = new Date(sy, sm - 1, sd);
+                const mTasks = getTasksForDate('morning', sDate);
+                const nTasks = getTasksForDate('night', sDate);
+                const mDone = getCompletedIds('morning', key).filter(id => mTasks.some(tk => tk.id === id)).length;
+                const nDone = getCompletedIds('night', key).filter(id => nTasks.some(tk => tk.id === id)).length;
+                const rec = state.history[key] || {};
+                const rest = Boolean(rec.restDay);
+                const moodObj = MOOD_OPTIONS.find(m => m.id === rec.mood);
+
+                selectedDetailHtml = `
+                    <div class="mt-4 pt-4 border-t ${t.border} space-y-3">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mincho text-sm font-medium">${sm}月${sd}日 (${DAY_LABELS[sDate.getDay()]})</span>
+                                ${moodObj ? `<span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full ${t.subtleBg} ${t.muted}">${moodObj.label}</span>` : ''}
+                            </div>
+                            <div class="flex items-center gap-3 text-xs">
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-[#D98A3C]"></span>朝 ${mDone}/${mTasks.length}
+                                </span>
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-[#8E9FFF]"></span>夜 ${nDone}/${nTasks.length}
+                                </span>
+                            </div>
+                        </div>
+
+                        ${rec.journal ? `
+                            <p class="text-xs leading-relaxed px-3.5 py-2.5 rounded-xl ${t.subtleBg} opacity-90">「${escapeHtml(rec.journal)}」</p>
+                        ` : ''}
+
+                        <!-- 長続きの工夫：お休みパス（連続記録を守る） -->
+                        <div class="flex items-center justify-between gap-2 pt-1">
+                            <span class="text-[11px] ${t.muted}">疲れた日は「お休み日」にすると連続記録が守られます</span>
+                            <button onclick="toggleRestDay('${key}')" class="px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all flex-shrink-0 ${rest ? `${t.accentSoft} border-current` : `${t.border} ${t.muted} hover:opacity-100`}">
+                                ${rest ? 'お休み日 解除' : 'お休み日にする'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="space-y-5 animate-fade-up">
+                    <!-- 1. 自分のために整えた時間 ヒーローカード -->
+                    <section class="rounded-[28px] p-6 ${t.card} relative overflow-hidden">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <p class="font-serif italic text-xs tracking-[0.18em] uppercase ${t.muted}">Time Invested in Yourself</p>
+                                <h2 class="font-mincho text-sm mt-1 opacity-80">これまでに自分を整えた時間</h2>
+                                <div class="font-serif text-4xl sm:text-5xl font-medium tracking-tight mt-2 tabular-nums">
+                                    ${formatMinutes(stats.totalInvestedMinutes)}
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="inline-block text-[11px] px-2.5 py-1 rounded-full ${t.accentSoft}">
+                                    累計 ${stats.totalCompletedTasks} 行動
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 優しい継続リズム（朝・夜） -->
+                        <div class="grid grid-cols-2 gap-3 mt-5 pt-4 border-t ${t.border}">
+                            <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl ${t.subtleBg}">
+                                <div>
+                                    <div class="flex items-center gap-1.5 text-[11px] ${t.muted}">
+                                        <span class="w-2 h-2 rounded-full bg-[#D98A3C]"></span>
+                                        <span>朝の継続</span>
+                                    </div>
+                                    <div class="font-serif text-2xl font-medium mt-0.5 tabular-nums">${stats.morningStreak}<span class="font-sans text-xs ml-1 opacity-65">日</span></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl ${t.subtleBg}">
+                                <div>
+                                    <div class="flex items-center gap-1.5 text-[11px] ${t.muted}">
+                                        <span class="w-2 h-2 rounded-full bg-[#8E9FFF]"></span>
+                                        <span>夜の継続</span>
+                                    </div>
+                                    <div class="font-serif text-2xl font-medium mt-0.5 tabular-nums">${stats.nightStreak}<span class="font-sans text-xs ml-1 opacity-65">日</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-[11px] ${t.muted} mt-3 opacity-80">
+                            ※ 1項目だけの「小さな一歩」やお休み日でも、あなたの継続リズムは途切れません。
+                        </p>
+                    </section>
+
+                    <!-- 2. 天体カレンダー -->
+                    <section class="rounded-[28px] p-5 ${t.card}">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="font-serif text-lg font-medium tracking-wide">${year} . ${String(month + 1).padStart(2, '0')}</h3>
+                                <p class="text-[11px] ${t.muted}">右弧が朝、左弧が夜の達成を表します</p>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="changeCalendarMonth(-1)" class="p-2 rounded-full ${t.subtleBg} ${t.muted} hover:opacity-100" aria-label="前月">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
+                                </button>
+                                <button onclick="changeCalendarMonth(1)" class="p-2 rounded-full ${t.subtleBg} ${t.muted} hover:opacity-100" aria-label="次月">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="9 18 15 12 9 6"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-7 gap-1 text-center text-[11px] ${t.muted} mb-2">
+                            ${DAY_LABELS.map(l => `<div>${l}</div>`).join('')}
+                        </div>
+
+                        <div class="grid grid-cols-7 gap-1">
+                            ${calendarCells}
+                        </div>
+
+                        ${selectedDetailHtml}
+                    </section>
+
+                    <!-- 3. 光のしるし（マイルストーンバッジ） -->
+                    <section class="rounded-[28px] p-5 ${t.card}">
+                        <div class="flex items-center justify-between mb-3.5">
+                            <h3 class="font-mincho text-sm font-medium">光のしるし</h3>
+                            <span class="text-[11px] ${t.muted}">${stats.milestones.filter(m => m.unlocked).length} / ${stats.milestones.length} 獲得</span>
+                        </div>
+                        <div class="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
+                            ${stats.milestones.map(m => `
+                                <div class="w-32 flex-shrink-0 rounded-2xl p-3.5 border transition-all ${m.unlocked ? `${t.accentSoft} border-current/20` : `${t.subtleBg} border-transparent opacity-50`}">
+                                    <div class="w-9 h-9 rounded-full flex items-center justify-center mb-2.5 ${m.unlocked ? `${t.accentBg} text-white shadow-sm` : `border ${t.border}`}">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${m.svg}</svg>
+                                    </div>
+                                    <div class="text-xs font-medium leading-tight">${m.title}</div>
+                                    <div class="text-[10px] opacity-70 mt-1 leading-snug">${m.desc}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+
+                    <!-- 4. 直近14日間の朝夜リズム & 曜日バランス -->
+                    <section class="rounded-[28px] p-5 ${t.card} space-y-5">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-mincho text-sm font-medium">14日間の朝夜リズム</h3>
+                                <div class="flex items-center gap-2.5 text-[10px] ${t.muted}">
+                                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#D98A3C]"></span>朝</span>
+                                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#8E9FFF]"></span>夜</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-14 gap-1 items-end h-20" style="grid-template-columns: repeat(14, minmax(0, 1fr));">
+                                ${stats.recent14.map(d => `
+                                    <div class="flex flex-col items-center gap-1 h-full justify-end">
+                                        <div class="w-full flex flex-col gap-0.5 justify-end h-14">
+                                            ${d.rest
+                                                ? `<div class="w-full h-3 rounded-full border border-dashed border-current opacity-35"></div>`
+                                                : `
+                                                    <div class="w-full rounded-full bg-[#D98A3C] transition-all" style="height: ${Math.max(d.mRate > 0 ? 4 : 0, Math.round(d.mRate * 24))}px; opacity: ${d.mRate > 0 ? 0.9 : 0.1}"></div>
+                                                    <div class="w-full rounded-full bg-[#8E9FFF] transition-all" style="height: ${Math.max(d.nRate > 0 ? 4 : 0, Math.round(d.nRate * 24))}px; opacity: ${d.nRate > 0 ? 0.9 : 0.1}"></div>
+                                                `
+                                            }
+                                        </div>
+                                        <span class="text-[9px] ${t.muted} tabular-nums">${d.dateNum}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t ${t.border}">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-mincho text-sm font-medium">曜日ごとの達成バランス</h3>
+                                <span class="text-[11px] ${t.muted}">過去30日</span>
+                            </div>
+                            <div class="grid grid-cols-7 gap-2 items-end h-24 pt-1">
+                                ${DAY_ORDER.map(dayIdx => {
+                                    const rate = stats.dowRates[dayIdx];
+                                    return `
+                                        <div class="flex flex-col items-center gap-1.5 h-full justify-end">
+                                            <span class="font-serif text-[11px] ${t.muted} tabular-nums">${rate}%</span>
+                                            <div class="w-3.5 h-12 rounded-full ${t.subtleBg} flex items-end overflow-hidden">
+                                                <div class="w-full rounded-full transition-all duration-500 ${t.accentBg}" style="height: ${Math.max(8, rate)}%"></div>
+                                            </div>
+                                            <span class="text-[11px] ${t.muted}">${DAY_LABELS[dayIdx]}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 5. ちいさな振り返りタイムライン -->
+                    ${stats.journalEntries.length > 0 ? `
+                        <section class="rounded-[28px] p-5 ${t.card} space-y-3">
+                            <h3 class="font-mincho text-sm font-medium">最近の振り返り</h3>
+                            <div class="space-y-2.5">
+                                ${stats.journalEntries.map(entry => {
+                                    const moodObj = MOOD_OPTIONS.find(m => m.id === entry.mood);
+                                    return `
+                                        <div class="p-3.5 rounded-2xl ${t.subtleBg} space-y-1">
+                                            <div class="flex items-center justify-between text-[11px] ${t.muted}">
+                                                <span>${entry.dateLabel}</span>
+                                                ${moodObj ? `<span class="inline-flex items-center gap-1">${moodObj.icon} ${moodObj.label}</span>` : ''}
+                                            </div>
+                                            ${entry.journal ? `<p class="text-xs leading-relaxed opacity-90">${escapeHtml(entry.journal)}</p>` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </section>
+                    ` : ''}
+
+                    <!-- フッター操作 -->
+                    <div class="flex items-center justify-center pt-1 pb-2 text-xs ${t.muted}">
+                        <button onclick="confirmResetApp()" class="underline opacity-55 hover:opacity-100 transition-opacity">初期サンプルデータに戻す</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* ==========================================================================
+           ユーザーアクションハンドラ
+           ========================================================================== */
+        function setPeriod(period) {
+            stopVoiceInput();
+            state.period = period;
+            render();
+        }
+
+        function setTab(tab) {
+            stopVoiceInput();
+            state.tab = tab;
+            render();
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            saveState();
+            applyTheme();
+            showToast(state.soundEnabled ? '効果音をオンにしました' : '効果音をオフにしました');
+            if (state.soundEnabled) playCheckSound();
+        }
+
+        function setRoutineFilter(val) {
+            state.routineFilterDay = val;
+            render();
+        }
+
+        function selectCalendarDate(dateKey) {
+            state.selectedCalendarDate = dateKey;
+            render();
+        }
+
+        function changeCalendarMonth(delta) {
+            let m = state.calendarMonth + delta;
+            let y = state.calendarYear;
+            if (m < 0) { m = 11; y--; }
+            if (m > 11) { m = 0; y++; }
+            state.calendarMonth = m;
+            state.calendarYear = y;
+            render();
+        }
+
+        function toggleTaskCompletion(taskId) {
+            const today = new Date();
+            const todayKey = getDateKey(today);
+            const rec = ensureDayRecord(todayKey);
+            const list = rec[state.period];
+            const idx = list.indexOf(taskId);
+
+            if (idx >= 0) {
+                list.splice(idx, 1);
+            } else {
+                list.push(taskId);
+                playCheckSound();
+            }
+            saveState();
+            render();
+
+            if (idx < 0 && isPeriodFullyCompleted(state.period, today)) {
+                playCompleteAllSound();
+                launchConfetti();
+                showToast(state.period === 'morning' ? '朝のルーティーンを達成しました' : '夜のルーティーンを達成しました');
+            }
+        }
+
+        function setDayMood(dateKey, moodId) {
+            const rec = ensureDayRecord(dateKey);
+            rec.mood = rec.mood === moodId ? null : moodId;
+            saveState();
+            render();
+            if (rec.mood) {
+                playCheckSound();
+                showToast('今日の気分を記録しました');
+            }
+        }
+
+        function saveDayJournal(dateKey, inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const rec = ensureDayRecord(dateKey);
+            rec.journal = input.value.trim();
+            saveState();
+            render();
+            showToast('ひとことを保存しました');
+        }
+
+        function toggleRestDay(dateKey) {
+            const rec = ensureDayRecord(dateKey);
+            rec.restDay = !rec.restDay;
+            saveState();
+            render();
+            showToast(rec.restDay ? 'お休み日に設定しました（連続記録が守られます）' : 'お休み日を解除しました');
+        }
+
+        function moveRoutine(taskId, direction) {
+            const periodTasks = state.routines
+                .filter(r => r.period === state.period)
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+            const idx = periodTasks.findIndex(r => r.id === taskId);
+            const targetIdx = idx + direction;
+            if (idx < 0 || targetIdx < 0 || targetIdx >= periodTasks.length) return;
+
+            const temp = periodTasks[idx];
+            periodTasks[idx] = periodTasks[targetIdx];
+            periodTasks[targetIdx] = temp;
+
+            periodTasks.forEach((task, i) => {
+                task.order = i;
+            });
+            saveState();
+            render();
+        }
+
+        /* ==========================================================================
+           タスク追加・編集モーダル
+           ========================================================================== */
+        function openTaskModal(taskId) {
+            stopVoiceInput();
+            const t = getThemeClasses();
+            const modal = document.getElementById('task-modal');
+            const card = document.getElementById('task-modal-card');
+            card.className = `w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-fade-up max-h-[90vh] overflow-y-auto ${t.isMorning ? 'bg-[#FAF7F2] text-morning-text' : 'bg-[#131A2C] text-night-text border border-slate-700/80'}`;
+
+            document.getElementById('task-title-input').className = `w-full pl-4 pr-12 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 transition-all ${t.input}`;
+            document.getElementById('task-duration-input').className = `w-24 px-3.5 py-2.5 rounded-2xl border text-sm font-medium text-center focus:outline-none focus:ring-2 ${t.input}`;
+            document.getElementById('task-note-input').className = `w-full pl-4 pr-12 py-2.5 rounded-2xl border text-sm focus:outline-none focus:ring-2 transition-all ${t.input}`;
+            document.getElementById('voice-btn-task-title').className = `absolute right-2 p-2 rounded-xl transition-all ${t.muted} hover:opacity-100`;
+            document.getElementById('voice-btn-task-note').className = `absolute right-2 p-1.5 rounded-xl transition-all ${t.muted} hover:opacity-100`;
+            document.getElementById('save-task-btn').className = `flex-1 py-3 px-5 rounded-2xl text-sm font-medium text-white shadow-sm transition-all active:scale-[0.98] ${t.accentBg}`;
+
+            document.getElementById('days-error').classList.add('hidden');
+
+            if (taskId) {
+                const task = state.routines.find(r => r.id === taskId);
+                if (!task) return;
+                document.getElementById('modal-title').textContent = 'ルーティーンを編集';
+                document.getElementById('edit-task-id').value = task.id;
+                document.getElementById('task-title-input').value = task.title;
+                document.getElementById('task-duration-input').value = task.duration;
+                document.getElementById('task-note-input').value = task.note || '';
+                document.getElementById('delete-task-btn').classList.remove('hidden');
+                formState.period = task.period;
+                formState.days = [...task.days];
+            } else {
+                document.getElementById('modal-title').textContent = 'ルーティーンを追加';
+                document.getElementById('edit-task-id').value = '';
+                document.getElementById('task-title-input').value = '';
+                document.getElementById('task-duration-input').value = 5;
+                document.getElementById('task-note-input').value = '';
+                document.getElementById('delete-task-btn').classList.add('hidden');
+                formState.period = state.period;
+                formState.days = state.routineFilterDay !== 'all'
+                    ? [Number(state.routineFilterDay)]
+                    : [0, 1, 2, 3, 4, 5, 6];
+            }
+
+            renderFormPeriodButtons();
+            renderFormDayButtons();
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => document.getElementById('task-title-input').focus(), 100);
+        }
+
+        function closeTaskModal() {
+            stopVoiceInput();
+            const modal = document.getElementById('task-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectFormPeriod(p) {
+            formState.period = p;
+            renderFormPeriodButtons();
+        }
+
+        function renderFormPeriodButtons() {
+            const t = getThemeClasses();
+            const mBtn = document.getElementById('form-period-morning');
+            const nBtn = document.getElementById('form-period-night');
+            const activeMorning = 'border-amber-600/60 bg-amber-500/12 text-amber-700';
+            const activeNight = 'border-indigo-400/70 bg-indigo-500/15 text-indigo-300';
+            const inactive = `${t.border} opacity-65 hover:opacity-100`;
+
+            mBtn.className = `py-2.5 px-3 rounded-2xl border text-xs sm:text-sm font-medium flex items-center justify-center gap-1.5 transition-all ${formState.period === 'morning' ? activeMorning : inactive}`;
+            nBtn.className = `py-2.5 px-3 rounded-2xl border text-xs sm:text-sm font-medium flex items-center justify-center gap-1.5 transition-all ${formState.period === 'night' ? activeNight : inactive}`;
+        }
+
+        function setDurationPreset(min) {
+            document.getElementById('task-duration-input').value = min;
+        }
+
+        function setDayPreset(type) {
+            if (type === 'all') formState.days = [0, 1, 2, 3, 4, 5, 6];
+            if (type === 'weekdays') formState.days = [1, 2, 3, 4, 5];
+            if (type === 'weekends') formState.days = [0, 6];
+            document.getElementById('days-error').classList.add('hidden');
+            renderFormDayButtons();
+        }
+
+        function toggleFormDay(dayIdx) {
+            const i = formState.days.indexOf(dayIdx);
+            if (i >= 0) {
+                formState.days.splice(i, 1);
+            } else {
+                formState.days.push(dayIdx);
+            }
+            if (formState.days.length > 0) {
+                document.getElementById('days-error').classList.add('hidden');
+            }
+            renderFormDayButtons();
+        }
+
+        function renderFormDayButtons() {
+            const t = getThemeClasses();
+            const container = document.getElementById('form-days-container');
+            container.innerHTML = DAY_ORDER.map(dayIdx => {
+                const selected = formState.days.includes(dayIdx);
+                return `
+                    <button type="button" onclick="toggleFormDay(${dayIdx})" class="py-2.5 rounded-xl text-xs font-medium border transition-all ${selected ? `${t.accentBg} text-white border-transparent` : `${t.border} opacity-65 hover:opacity-100`}">
+                        ${DAY_LABELS[dayIdx]}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function saveTaskForm(event) {
+            event.preventDefault();
+            if (formState.days.length === 0) {
+                document.getElementById('days-error').classList.remove('hidden');
+                return;
+            }
+
+            const id = document.getElementById('edit-task-id').value;
+            const title = document.getElementById('task-title-input').value.trim();
+            const duration = Math.max(1, Math.min(180, parseInt(document.getElementById('task-duration-input').value, 10) || 5));
+            const note = document.getElementById('task-note-input').value.trim();
+
+            if (!title) return;
+
+            if (id) {
+                const task = state.routines.find(r => r.id === id);
+                if (task) {
+                    task.title = title;
+                    task.period = formState.period;
+                    task.duration = duration;
+                    task.days = [...formState.days];
+                    task.note = note;
+                }
+                showToast('ルーティーンを更新しました');
+            } else {
+                const samePeriod = state.routines.filter(r => r.period === formState.period);
+                const maxOrder = samePeriod.reduce((max, r) => Math.max(max, r.order ?? 0), -1);
+                state.routines.push({
+                    id: 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                    title,
+                    period: formState.period,
+                    duration,
+                    days: [...formState.days],
+                    note,
+                    order: maxOrder + 1
+                });
+                showToast('ルーティーンを追加しました');
+            }
+
+            saveState();
+            closeTaskModal();
+            render();
+        }
+
+        function confirmDeleteTask() {
+            const id = document.getElementById('edit-task-id').value;
+            if (!id) return;
+            openConfirmModal('項目の削除', 'このルーティーンを削除しますか？', () => {
+                state.routines = state.routines.filter(r => r.id !== id);
+                saveState();
+                closeTaskModal();
+                render();
+                showToast('項目を削除しました');
+            });
+        }
+
+        function confirmResetApp() {
+            openConfirmModal('データの初期化', '現在のルーティーンと記録をリセットし、初期サンプルに戻しますか？', () => {
+                const defaults = createDefaultData();
+                state.routines = defaults.routines;
+                state.history = defaults.history;
+                saveState();
+                render();
+                showToast('初期データに戻しました');
+            });
+        }
+
+        /* ==========================================================================
+           確認モーダル & トースト通知
+           ========================================================================== */
+        function openConfirmModal(title, message, onConfirm) {
+            const t = getThemeClasses();
+            const modal = document.getElementById('confirm-modal');
+            const card = document.getElementById('confirm-modal-card');
+            card.className = `w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-fade-up text-center space-y-4 ${t.isMorning ? 'bg-[#FAF7F2] text-morning-text' : 'bg-[#131A2C] text-night-text border border-slate-700/80'}`;
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            pendingConfirmAction = onConfirm;
+
+            const okBtn = document.getElementById('confirm-ok-btn');
+            okBtn.onclick = () => {
+                const fn = pendingConfirmAction;
+                closeConfirmModal();
+                if (fn) fn();
+            };
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            pendingConfirmAction = null;
+        }
+
+        let toastTimer = null;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const t = getThemeClasses();
+            toast.textContent = msg;
+            toast.className = `fixed top-20 left-1/2 -translate-x-1/2 z-[70] px-5 py-2.5 rounded-full text-xs font-medium shadow-xl transition-all duration-300 ${t.isMorning ? 'bg-[#2B2520] text-[#FAF7F2]' : 'bg-[#EEF1F7] text-[#0E131F]'} opacity-100 translate-y-0`;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-[-8px]', 'pointer-events-none');
+            }, 2500);
+        }
+
+        /* ==========================================================================
+           タイマー付きガイドモード (Focus Mode)
+           ========================================================================== */
+        function startFocusMode(startTaskId = null) {
+            const today = new Date();
+            const todayKey = getDateKey(today);
+            const allTasks = getTasksForDate(state.period, today);
+            const completedIds = getCompletedIds(state.period, todayKey);
+            let pendingTasks = allTasks.filter(t => !completedIds.includes(t.id));
+
+            if (pendingTasks.length === 0) {
+                showToast('今日の項目はすべて完了しています');
+                return;
+            }
+
+            if (startTaskId) {
+                const idx = pendingTasks.findIndex(t => t.id === startTaskId);
+                if (idx > 0) {
+                    const [picked] = pendingTasks.splice(idx, 1);
+                    pendingTasks.unshift(picked);
+                }
+            }
+
+            focusState.active = true;
+            focusState.queue = pendingTasks;
+            focusState.currentIndex = 0;
+
+            loadFocusTask(0);
+
+            const overlay = document.getElementById('focus-overlay');
+            const t = getThemeClasses();
+            overlay.className = `fixed inset-0 z-50 flex flex-col justify-between p-6 sm:p-8 transition-colors duration-500 overflow-y-auto ${t.bodyBg}`;
+            document.getElementById('focus-badge').className = `text-[11px] font-medium px-3 py-1 rounded-full tracking-wide ${t.accentSoft}`;
+            document.getElementById('focus-ring-progress').setAttribute('stroke', t.accentStroke);
+            document.getElementById('focus-play-btn').className = `w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg transition-transform active:scale-95 ${t.accentBg}`;
+            document.getElementById('focus-complete-btn').className = `w-full max-w-xs py-3.5 px-6 rounded-full text-sm font-medium text-white shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${t.accentBg}`;
+            document.getElementById('focus-next-preview').className = `inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs ${t.subtleBg} ${t.muted}`;
+
+            startFocusTimer();
+        }
+
+        function loadFocusTask(index) {
+            stopFocusTimer();
+            const task = focusState.queue[index];
+            if (!task) {
+                closeFocusMode();
+                return;
+            }
+            focusState.currentIndex = index;
+            focusState.totalSec = (Number(task.duration) || 1) * 60;
+            focusState.remainingSec = focusState.totalSec;
+
+            document.getElementById('focus-period-label').textContent = state.period === 'morning' ? 'Morning Ritual' : 'Night Ritual';
+            document.getElementById('focus-step-counter').textContent = `${index + 1} / ${focusState.queue.length}`;
+            document.getElementById('focus-task-title').textContent = task.title;
+            document.getElementById('focus-task-note').textContent = task.note || '';
+
+            const nextTask = focusState.queue[index + 1];
+            const nextEl = document.getElementById('focus-next-preview');
+            if (nextTask) {
+                nextEl.innerHTML = `<span>次：${escapeHtml(nextTask.title)}（${nextTask.duration}分）</span>`;
+            } else {
+                nextEl.innerHTML = `<span>これが最後の項目です</span>`;
+            }
+
+            updateFocusTimerUI();
+        }
+
+        function updateFocusTimerUI() {
+            const mins = Math.floor(focusState.remainingSec / 60);
+            const secs = focusState.remainingSec % 60;
+            document.getElementById('focus-timer-display').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+            const circumference = 552.92; // 2 * PI * 88
+            const ratio = focusState.totalSec > 0 ? focusState.remainingSec / focusState.totalSec : 0;
+            const offset = circumference * (1 - ratio);
+            document.getElementById('focus-ring-progress').style.strokeDashoffset = offset;
+
+            const playBtn = document.getElementById('focus-play-btn');
+            const statusText = document.getElementById('focus-timer-status');
+            if (focusState.isRunning) {
+                playBtn.innerHTML = `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`;
+                statusText.textContent = '進行中';
+            } else {
+                playBtn.innerHTML = `<svg class="w-6 h-6 ml-0.5" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+                statusText.textContent = focusState.remainingSec === 0 ? '時間になりました' : '一時停止中';
+            }
+        }
+
+        function startFocusTimer() {
+            if (focusState.isRunning) return;
+            ensureAudioReady();
+            focusState.isRunning = true;
+            updateFocusTimerUI();
+            focusState.intervalId = setInterval(() => {
+                if (focusState.remainingSec > 0) {
+                    focusState.remainingSec--;
+                    updateFocusTimerUI();
+                    if (focusState.remainingSec === 0) {
+                        stopFocusTimer();
+                        playTimerEndSound();
+                    }
+                }
+            }, 1000);
+        }
+
+        function stopFocusTimer() {
+            focusState.isRunning = false;
+            if (focusState.intervalId) {
+                clearInterval(focusState.intervalId);
+                focusState.intervalId = null;
+            }
+            updateFocusTimerUI();
+        }
+
+        function toggleFocusTimer() {
+            if (focusState.isRunning) {
+                stopFocusTimer();
+            } else {
+                if (focusState.remainingSec === 0) {
+                    focusState.remainingSec = 60;
+                    focusState.totalSec = Math.max(focusState.totalSec, 60);
+                }
+                startFocusTimer();
+            }
+        }
+
+        function addOneMinuteFocus() {
+            focusState.remainingSec += 60;
+            focusState.totalSec += 60;
+            updateFocusTimerUI();
+        }
+
+        function skipFocusTask() {
+            if (focusState.currentIndex + 1 < focusState.queue.length) {
+                loadFocusTask(focusState.currentIndex + 1);
+                startFocusTimer();
+            } else {
+                closeFocusMode();
+            }
+        }
+
+        function completeCurrentFocusTask() {
+            const task = focusState.queue[focusState.currentIndex];
+            if (task) {
+                const todayKey = getDateKey(new Date());
+                const rec = ensureDayRecord(todayKey);
+                if (!rec[state.period].includes(task.id)) {
+                    rec[state.period].push(task.id);
+                }
+                saveState();
+                playCheckSound();
+            }
+
+            if (focusState.currentIndex + 1 < focusState.queue.length) {
+                loadFocusTask(focusState.currentIndex + 1);
+                startFocusTimer();
+            } else {
+                closeFocusMode();
+                render();
+                if (isPeriodFullyCompleted(state.period, new Date())) {
+                    playCompleteAllSound();
+                    launchConfetti();
+                    showToast('すべてのルーティーンを完了しました');
+                }
+            }
+        }
+
+        function closeFocusMode() {
+            stopFocusTimer();
+            focusState.active = false;
+            const overlay = document.getElementById('focus-overlay');
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            render();
+        }
+
+        /* ==========================================================================
+           上品な紙吹雪エフェクト (Canvas)
+           ========================================================================== */
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const colors = state.period === 'morning'
+                ? ['#C8793B', '#E5A358', '#F2D6B3', '#8C7A6B', '#FFFFFF']
+                : ['#90A2FF', '#6D7EF2', '#DFC58E', '#C7D2FE', '#64748B'];
+
+            const particles = Array.from({ length: 65 }, () => ({
+                x: canvas.width * (0.2 + Math.random() * 0.6),
+                y: canvas.height * 0.35 + (Math.random() - 0.5) * 60,
+                vx: (Math.random() - 0.5) * 7.5,
+                vy: -Math.random() * 8.5 - 3,
+                size: Math.random() * 5.5 + 3,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                rot: Math.random() * Math.PI * 2,
+                vRot: (Math.random() - 0.5) * 0.14,
+                alpha: 1
+            }));
+
+            let frame = 0;
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let alive = false;
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.2;
+                    p.vx *= 0.99;
+                    p.rot += p.vRot;
+                    if (frame > 45) p.alpha -= 0.02;
+                    if (p.alpha > 0) {
+                        alive = true;
+                        ctx.save();
+                        ctx.globalAlpha = Math.max(0, p.alpha);
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate(p.rot);
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.55);
+                        ctx.restore();
+                    }
+                });
+                frame++;
+                if (alive && frame < 140) {
+                    requestAnimationFrame(animate);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        /* ==========================================================================
+           音声入力サポート (Web Speech API)
+           ========================================================================== */
+        const voiceState = {
+            recognition: null,
+            activeTargetId: null,
+            isListening: false,
+            baseText: '',
+            options: {},
+            finalRecognized: ''
+        };
+
+        function getSpeechRecognitionCtor() {
+            return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+        }
+
+        function getVoiceButtonForTarget(targetId) {
+            if (targetId === 'task-title-input') return document.getElementById('voice-btn-task-title');
+            if (targetId === 'task-note-input') return document.getElementById('voice-btn-task-note');
+            if (targetId === 'today-journal-input') return document.getElementById('voice-btn-today-journal');
+            return null;
+        }
+
+        function setVoiceButtonUI(targetId, listening) {
+            const btn = getVoiceButtonForTarget(targetId);
+            if (btn) {
+                if (listening) {
+                    btn.classList.add('voice-listening');
+                    btn.setAttribute('title', 'タップして音声入力を停止');
+                } else {
+                    btn.classList.remove('voice-listening');
+                    btn.setAttribute('title', '音声で入力');
+                }
+            }
+            if (targetId === 'today-journal-input') {
+                const statusEl = document.getElementById('voice-status-today-journal');
+                if (statusEl) {
+                    statusEl.textContent = listening ? '聴き取っています…' : '音声入力対応';
+                }
+            } else if (targetId === 'task-title-input') {
+                const hintEl = document.getElementById('voice-hint-task-title');
+                if (hintEl) {
+                    hintEl.textContent = listening ? '話しかけてください…' : '「白湯を飲む 5分」のように話せます';
+                }
+            }
+        }
+
+        function stopVoiceInput() {
+            if (voiceState.recognition) {
+                try {
+                    voiceState.recognition.stop();
+                } catch (e) {}
+            }
+            if (voiceState.activeTargetId) {
+                setVoiceButtonUI(voiceState.activeTargetId, false);
+            }
+            voiceState.isListening = false;
+            voiceState.activeTargetId = null;
+            voiceState.recognition = null;
+        }
+
+        function normalizeDigits(str) {
+            return str.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+        }
+
+        function toggleVoiceInput(targetId, options = {}) {
+            const SpeechRecognition = getSpeechRecognitionCtor();
+            if (!SpeechRecognition) {
+                showToast('お使いのブラウザは音声入力に対応していません（Chrome / Safari推奨）');
+                return;
+            }
+
+            // 同じ入力欄で録音中なら停止
+            if (voiceState.isListening && voiceState.activeTargetId === targetId) {
+                stopVoiceInput();
+                return;
+            }
+
+            // 別の入力欄で録音中なら一度停止
+            if (voiceState.isListening) {
+                stopVoiceInput();
+            }
+
+            const inputEl = document.getElementById(targetId);
+            if (!inputEl) return;
+
+            try {
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'ja-JP';
+                recognition.interimResults = true;
+                recognition.continuous = false;
+                recognition.maxAlternatives = 1;
+
+                voiceState.recognition = recognition;
+                voiceState.activeTargetId = targetId;
+                voiceState.isListening = true;
+                voiceState.options = options;
+                voiceState.baseText = inputEl.value.trim();
+                voiceState.finalRecognized = '';
+
+                setVoiceButtonUI(targetId, true);
+                showToast('音声入力を開始しました。お話しください');
+
+                recognition.onresult = (event) => {
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+
+                    if (finalTranscript) {
+                        voiceState.finalRecognized += finalTranscript;
+                    }
+
+                    const spoken = (voiceState.finalRecognized + interimTranscript).trim();
+                    const el = document.getElementById(targetId);
+                    if (!el) return;
+
+                    // 既存テキストがある場合はスペースを挟んで追記（項目名が空ならそのまま）
+                    const combined = voiceState.baseText && spoken
+                        ? `${voiceState.baseText} ${spoken}`
+                        : (spoken || voiceState.baseText);
+                    const maxLen = parseInt(el.getAttribute('maxlength'), 10) || 80;
+                    el.value = combined.slice(0, maxLen);
+                };
+
+                recognition.onerror = (event) => {
+                    let msg = '音声の認識を中断しました';
+                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                        msg = 'マイクの使用が許可されていません。ブラウザの設定をご確認ください';
+                    } else if (event.error === 'no-speech') {
+                        msg = '音声が検出されませんでした。もう一度お試しください';
+                    } else if (event.error === 'network') {
+                        msg = 'ネットワークエラーにより音声認識できませんでした';
+                    }
+                    showToast(msg);
+                    stopVoiceInput();
+                };
+
+                recognition.onend = () => {
+                    const finishedTarget = voiceState.activeTargetId;
+                    const finishedOptions = voiceState.options || {};
+                    const recognizedText = voiceState.finalRecognized.trim();
+
+                    if (finishedTarget) {
+                        setVoiceButtonUI(finishedTarget, false);
+                    }
+                    voiceState.isListening = false;
+                    voiceState.activeTargetId = null;
+                    voiceState.recognition = null;
+
+                    const el = finishedTarget ? document.getElementById(finishedTarget) : null;
+                    if (!el || !recognizedText) return;
+
+                    // 項目名に「10分」などが含まれていれば所要時間を自動抽出
+                    if (finishedOptions.parseDuration) {
+                        const normalized = normalizeDigits(el.value);
+                        const match = normalized.match(/(\d{1,3})\s*分/);
+                        if (match) {
+                            const mins = Math.max(1, Math.min(180, parseInt(match[1], 10)));
+                            const durationInput = document.getElementById('task-duration-input');
+                            if (durationInput) durationInput.value = mins;
+                            const cleanedTitle = normalized.replace(/\s*\d{1,3}\s*分\s*/, ' ').trim();
+                            if (cleanedTitle) el.value = cleanedTitle;
+                            showToast(`音声入力を反映しました（所要時間 ${mins}分）`);
+                            return;
+                        }
+                    }
+
+                    // 今日のひとことメモは音声認識完了時に自動保存
+                    if (finishedOptions.autoSaveJournalDate) {
+                        saveDayJournal(finishedOptions.autoSaveJournalDate, finishedTarget);
+                        return;
+                    }
+
+                    playCheckSound();
+                    showToast('音声入力を反映しました');
+                };
+
+                recognition.start();
+            } catch (e) {
+                showToast('音声入力を開始できませんでした');
+                stopVoiceInput();
+            }
+        }
+
+        /* ==========================================================================
+           ホーム画面起動（PWA / モバイルWebアプリ）サポート
+           ========================================================================== */
+        let deferredInstallPrompt = null;
+
+        function isStandaloneMode() {
+            return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        }
+
+        function detectMobileOS() {
+            const ua = navigator.userAgent || '';
+            if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+                return 'ios';
+            }
+            if (/Android/i.test(ua)) {
+                return 'android';
+            }
+            return 'other';
+        }
+
+        // Canvasから洗練されたアプリアイコン(PNG Blob)とWeb App Manifestを動的生成
+        function initPwaSupport() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredInstallPrompt = e;
+            });
+
+            window.addEventListener('appinstalled', () => {
+                deferredInstallPrompt = null;
+                closeInstallModal();
+                applyTheme();
+                showToast('ホーム画面に追加されました');
+            });
+
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 512;
+                const ctx = canvas.getContext('2d');
+
+                // 背景グラデーション（夜明けと月光を融合した深いネイビー〜アンバー）
+                const grad = ctx.createLinearGradient(0, 0, 512, 512);
+                grad.addColorStop(0, '#141D34');
+                grad.addColorStop(0.65, '#1C2642');
+                grad.addColorStop(1, '#3D2B24');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 512, 512);
+
+                // 柔らかなオーラ光
+                const glow = ctx.createRadialGradient(256, 240, 20, 256, 240, 210);
+                glow.addColorStop(0, 'rgba(223, 197, 142, 0.32)');
+                glow.addColorStop(1, 'rgba(223, 197, 142, 0)');
+                ctx.fillStyle = glow;
+                ctx.fillRect(0, 0, 512, 512);
+
+                // 繊細な外枠リング
+                ctx.beginPath();
+                ctx.arc(256, 256, 178, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(223, 197, 142, 0.35)';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+
+                // 三日月（月光ゴールド）
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(246, 248, 86, 0, Math.PI * 2);
+                ctx.fillStyle = '#E8D3A2';
+                ctx.fill();
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(286, 224, 78, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // くり抜かれた部分を背景色で補完するため、もう一度合成
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-over';
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 512, 512);
+                ctx.restore();
+
+                // 小さな朝陽のアクセントドット
+                ctx.beginPath();
+                ctx.arc(312, 294, 24, 0, Math.PI * 2);
+                ctx.fillStyle = '#D98A3C';
+                ctx.fill();
+
+                canvas.toBlob((iconBlob) => {
+                    if (!iconBlob) return;
+                    const iconUrl = URL.createObjectURL(iconBlob);
+
+                    // favicon & apple-touch-icon を設定
+                    ['icon', 'apple-touch-icon'].forEach(rel => {
+                        const link = document.createElement('link');
+                        link.rel = rel;
+                        link.href = iconUrl;
+                        document.head.appendChild(link);
+                    });
+
+                    // モーダル内のプレビューにも反映
+                    const preview = document.getElementById('install-icon-preview');
+                    if (preview) {
+                        preview.innerHTML = `<img src="${iconUrl}" alt="Sora & Tsuki アイコン" class="w-full h-full object-cover">`;
+                    }
+
+                    // Web App Manifest を動的生成して登録
+                    const manifest = {
+                        name: 'Sora & Tsuki — 朝と夜のルーティーン',
+                        short_name: 'Sora & Tsuki',
+                        description: '朝と夜のルーティーンを心地よく続けるための管理アプリ',
+                        start_url: window.location.href,
+                        display: 'standalone',
+                        orientation: 'portrait',
+                        background_color: '#090D18',
+                        theme_color: state.period === 'morning' ? '#F6F2EB' : '#090D18',
+                        icons: [
+                            { src: iconUrl, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+                        ]
+                    };
+                    const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+                    const manifestUrl = URL.createObjectURL(manifestBlob);
+                    const manifestLink = document.createElement('link');
+                    manifestLink.rel = 'manifest';
+                    manifestLink.href = manifestUrl;
+                    document.head.appendChild(manifestLink);
+                }, 'image/png');
+            } catch (e) {
+                // Blob生成非対応環境ではフォールバック表示を維持
+            }
+        }
+
+        function openInstallModal() {
+            const t = getThemeClasses();
+            const modal = document.getElementById('install-modal');
+            const card = document.getElementById('install-modal-card');
+            card.className = `w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-fade-up space-y-5 max-h-[90vh] overflow-y-auto ${t.isMorning ? 'bg-[#FAF7F2] text-morning-text' : 'bg-[#131A2C] text-night-text border border-slate-700/80'}`;
+
+            const nativeSection = document.getElementById('native-install-section');
+            const nativeBtn = document.getElementById('native-install-btn');
+            if (deferredInstallPrompt) {
+                nativeSection.classList.remove('hidden');
+                nativeBtn.className = `w-full py-3.5 px-5 rounded-2xl text-sm font-medium text-white shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${t.accentBg}`;
+            } else {
+                nativeSection.classList.add('hidden');
+            }
+
+            const os = detectMobileOS();
+            const stepsContainer = document.getElementById('install-guide-steps');
+            const stepBoxClass = `p-4 rounded-2xl ${t.subtleBg} space-y-2.5`;
+
+            const iosGuide = `
+                <div class="${stepBoxClass}">
+                    <div class="font-medium flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] ${t.accentSoft}">iPhone / Safari</span>
+                        <span>ホーム画面への追加手順</span>
+                    </div>
+                    <ol class="space-y-1.5 opacity-85 list-decimal list-inside">
+                        <li>画面下部の <strong>共有ボタン（□に↑）</strong> をタップします</li>
+                        <li>メニューを下にスクロールし、<strong>「ホーム画面に追加」</strong> を選びます</li>
+                        <li>右上の <strong>「追加」</strong> をタップするとアイコンが配置されます</li>
+                    </ol>
+                </div>
+            `;
+
+            const androidGuide = `
+                <div class="${stepBoxClass}">
+                    <div class="font-medium flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] ${t.accentSoft}">Android / Chrome</span>
+                        <span>ホーム画面への追加手順</span>
+                    </div>
+                    <ol class="space-y-1.5 opacity-85 list-decimal list-inside">
+                        <li>ブラウザ右上の <strong>メニュー（⋮）</strong> をタップします</li>
+                        <li><strong>「アプリをインストール」</strong> または <strong>「ホーム画面に追加」</strong> を選びます</li>
+                        <li>確認画面で <strong>「追加」</strong> をタップするとアイコンが配置されます</li>
+                    </ol>
+                </div>
+            `;
+
+            const hostNote = `
+                <p class="text-[11px] ${t.muted} leading-relaxed px-1">
+                    ※ ホーム画面から起動するとアドレスバーが消え、全画面の専用アプリのように使えます。現在プレビュー画面内で開いている場合は、このHTMLファイルをブラウザで直接開くか、GitHub Pages・Netlify等に公開してアクセスすると追加できます。
+                </p>
+            `;
+
+            if (os === 'ios') {
+                stepsContainer.innerHTML = iosGuide + hostNote;
+            } else if (os === 'android') {
+                stepsContainer.innerHTML = androidGuide + hostNote;
+            } else {
+                stepsContainer.innerHTML = iosGuide + androidGuide + hostNote;
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeInstallModal() {
+            const modal = document.getElementById('install-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function triggerNativeInstall() {
+            if (!deferredInstallPrompt) return;
+            try {
+                deferredInstallPrompt.prompt();
+                const choice = await deferredInstallPrompt.userChoice;
+                if (choice && choice.outcome === 'accepted') {
+                    showToast('インストールを開始しました');
+                }
+                deferredInstallPrompt = null;
+                closeInstallModal();
+            } catch (e) {
+                showToast('ブラウザのメニューから「ホーム画面に追加」をお試しください');
+            }
+        }
+
+        /* ==========================================================================
+           初期化
+           ========================================================================== */
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            initPwaSupport();
+            render();
+        });
+    </script>
+</body>
+</html>
