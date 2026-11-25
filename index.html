@@ -8,6 +8,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Sora & Tsuki">
+    <link id="favicon-link" rel="icon" type="image/png">
+    <link id="apple-touch-icon" rel="apple-touch-icon" sizes="180x180">
+    <link id="manifest-link" rel="manifest">
     <title>Sora & Tsuki — 朝と夜のルーティーン</title>
     <!-- Google Fonts: Cormorant Garamond, Shippori Mincho, Inter, Noto Sans JP -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -361,16 +364,12 @@
     <div id="install-modal" class="fixed inset-0 z-[60] hidden items-end sm:items-center justify-center bg-black/55 backdrop-blur-sm p-0 sm:p-4">
         <div id="install-modal-card" class="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-fade-up space-y-5 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div id="install-icon-preview" class="w-11 h-11 rounded-2xl overflow-hidden shadow-md flex-shrink-0 flex items-center justify-center bg-[#182138]">
-                        <svg class="w-7 h-7" viewBox="0 0 64 64" fill="none">
-                            <circle cx="32" cy="32" r="20" stroke="#DFC58E" stroke-width="2" stroke-opacity="0.6"/>
-                            <path d="M35 18a14 14 0 1 0 11 22 11 11 0 1 1-11-22Z" fill="#DFC58E"/>
-                        </svg>
+                <div class="flex items-center gap-3.5">
+                    <div id="install-icon-preview" class="w-14 h-14 rounded-[16px] overflow-hidden shadow-lg flex-shrink-0 flex items-center justify-center bg-[#12192E] ring-1 ring-white/15">
                     </div>
                     <div>
                         <h3 class="font-mincho text-base font-medium">ホーム画面に追加</h3>
-                        <p class="text-[11px] opacity-65">スマホからアプリのようにすぐ起動できます</p>
+                        <p class="text-[11px] opacity-65">専用アイコンでアプリのように起動できます</p>
                     </div>
                 </div>
                 <button onclick="closeInstallModal()" class="p-2 rounded-full opacity-60 hover:opacity-100 transition-opacity" aria-label="閉じる">
@@ -2379,6 +2378,7 @@
            ホーム画面起動（PWA / モバイルWebアプリ）サポート
            ========================================================================== */
         let deferredInstallPrompt = null;
+        let cachedAppIconDataUrl = '';
 
         function isStandaloneMode() {
             return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -2395,8 +2395,159 @@
             return 'other';
         }
 
-        // Canvasから洗練されたアプリアイコン(PNG Blob)とWeb App Manifestを動的生成
+        // 4芒星（ダイヤ型のきらめき）を描画するヘルパー
+        function drawSparkleStar(ctx, cx, cy, outerR, innerR, color) {
+            ctx.save();
+            ctx.beginPath();
+            for (let i = 0; i < 8; i++) {
+                const r = i % 2 === 0 ? outerR : innerR;
+                const angle = (i * Math.PI) / 4 - Math.PI / 2;
+                const x = cx + Math.cos(angle) * r;
+                const y = cy + Math.sin(angle) * r;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // 洗練された「Sora & Tsuki」アプリアイコン(PNG Data URL)を同期生成
+        function buildAppIconDataUrl() {
+            if (cachedAppIconDataUrl) return cachedAppIconDataUrl;
+            try {
+                const size = 512;
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+
+                // 1. 夜空から暁へと移ろう深いグラデーション背景
+                const bgGrad = ctx.createLinearGradient(0, 0, size, size);
+                bgGrad.addColorStop(0, '#0B1121');
+                bgGrad.addColorStop(0.55, '#19223C');
+                bgGrad.addColorStop(1, '#432D28');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, size, size);
+
+                // 2. 月光と朝陽が溶け合う柔らかなアンビエント光
+                const moonAura = ctx.createRadialGradient(225, 225, 10, 225, 225, 220);
+                moonAura.addColorStop(0, 'rgba(236, 214, 166, 0.28)');
+                moonAura.addColorStop(1, 'rgba(236, 214, 166, 0)');
+                ctx.fillStyle = moonAura;
+                ctx.fillRect(0, 0, size, size);
+
+                const sunAura = ctx.createRadialGradient(315, 305, 10, 315, 305, 175);
+                sunAura.addColorStop(0, 'rgba(226, 138, 66, 0.34)');
+                sunAura.addColorStop(1, 'rgba(226, 138, 66, 0)');
+                ctx.fillStyle = sunAura;
+                ctx.fillRect(0, 0, size, size);
+
+                // 3. 天球儀をイメージした二重の繊細なゴールドリング
+                ctx.beginPath();
+                ctx.arc(256, 256, 176, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(232, 207, 160, 0.34)';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                ctx.save();
+                ctx.setLineDash([4, 10]);
+                ctx.beginPath();
+                ctx.arc(256, 256, 162, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(232, 207, 160, 0.22)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.restore();
+
+                // 4. なめらかなベジェ曲線で描くシャンパンゴールドの三日月
+                ctx.save();
+                ctx.shadowColor = 'rgba(245, 225, 180, 0.45)';
+                ctx.shadowBlur = 24;
+                const moonGrad = ctx.createLinearGradient(170, 150, 290, 340);
+                moonGrad.addColorStop(0, '#F7E7C4');
+                moonGrad.addColorStop(1, '#D3AE6E');
+                ctx.fillStyle = moonGrad;
+
+                ctx.beginPath();
+                ctx.moveTo(278, 156);
+                ctx.bezierCurveTo(192, 164, 158, 242, 186, 308);
+                ctx.bezierCurveTo(212, 366, 286, 382, 336, 344);
+                ctx.bezierCurveTo(274, 356, 222, 316, 218, 256);
+                ctx.bezierCurveTo(214, 202, 244, 168, 278, 156);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+
+                // 5. 三日月の懐に寄り添うテラコッタ・アンバーの朝陽オーブ
+                ctx.save();
+                ctx.shadowColor = 'rgba(232, 146, 72, 0.55)';
+                ctx.shadowBlur = 22;
+                const sunGrad = ctx.createLinearGradient(272, 232, 336, 304);
+                sunGrad.addColorStop(0, '#F2A65A');
+                sunGrad.addColorStop(1, '#C86928');
+                ctx.beginPath();
+                ctx.arc(304, 266, 36, 0, Math.PI * 2);
+                ctx.fillStyle = sunGrad;
+                ctx.fill();
+                ctx.restore();
+
+                // 6. 静かに瞬く星々のアクセント
+                drawSparkleStar(ctx, 326, 182, 13, 3.2, 'rgba(247, 231, 196, 0.92)');
+                drawSparkleStar(ctx, 182, 186, 7, 1.8, 'rgba(247, 231, 196, 0.65)');
+                ctx.beginPath();
+                ctx.arc(352, 222, 2.8, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(247, 231, 196, 0.75)';
+                ctx.fill();
+
+                cachedAppIconDataUrl = canvas.toDataURL('image/png');
+                return cachedAppIconDataUrl;
+            } catch (e) {
+                return '';
+            }
+        }
+
+        // iOS Safari / Android Chrome 両対応のアイコン＆マニフェスト即時登録
+        function applyAppIconsAndManifest() {
+            const iconDataUrl = buildAppIconDataUrl();
+            if (!iconDataUrl) return;
+
+            const appleIcon = document.getElementById('apple-touch-icon');
+            if (appleIcon) appleIcon.setAttribute('href', iconDataUrl);
+
+            const favicon = document.getElementById('favicon-link');
+            if (favicon) favicon.setAttribute('href', iconDataUrl);
+
+            const preview = document.getElementById('install-icon-preview');
+            if (preview) {
+                preview.innerHTML = `<img src="${iconDataUrl}" alt="Sora & Tsuki アイコン" class="w-full h-full object-cover">`;
+            }
+
+            try {
+                const startUrl = window.location.href.split('#')[0];
+                const manifest = {
+                    name: 'Sora & Tsuki — 朝と夜のルーティーン',
+                    short_name: 'Sora & Tsuki',
+                    description: '朝と夜のルーティーンを心地よく続けるための管理アプリ',
+                    start_url: startUrl,
+                    display: 'standalone',
+                    orientation: 'portrait',
+                    background_color: '#0B1121',
+                    theme_color: state.period === 'morning' ? '#F6F2EB' : '#090D18',
+                    icons: [
+                        { src: iconDataUrl, sizes: '512x512', type: 'image/png', purpose: 'any' },
+                        { src: iconDataUrl, sizes: '192x192', type: 'image/png', purpose: 'any' }
+                    ]
+                };
+                const manifestDataUrl = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+                const manifestLink = document.getElementById('manifest-link');
+                if (manifestLink) manifestLink.setAttribute('href', manifestDataUrl);
+            } catch (e) {}
+        }
+
         function initPwaSupport() {
+            applyAppIconsAndManifest();
+
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredInstallPrompt = e;
@@ -2408,105 +2559,10 @@
                 applyTheme();
                 showToast('ホーム画面に追加されました');
             });
-
-            try {
-                const canvas = document.createElement('canvas');
-                canvas.width = 512;
-                canvas.height = 512;
-                const ctx = canvas.getContext('2d');
-
-                // 背景グラデーション（夜明けと月光を融合した深いネイビー〜アンバー）
-                const grad = ctx.createLinearGradient(0, 0, 512, 512);
-                grad.addColorStop(0, '#141D34');
-                grad.addColorStop(0.65, '#1C2642');
-                grad.addColorStop(1, '#3D2B24');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, 512, 512);
-
-                // 柔らかなオーラ光
-                const glow = ctx.createRadialGradient(256, 240, 20, 256, 240, 210);
-                glow.addColorStop(0, 'rgba(223, 197, 142, 0.32)');
-                glow.addColorStop(1, 'rgba(223, 197, 142, 0)');
-                ctx.fillStyle = glow;
-                ctx.fillRect(0, 0, 512, 512);
-
-                // 繊細な外枠リング
-                ctx.beginPath();
-                ctx.arc(256, 256, 178, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(223, 197, 142, 0.35)';
-                ctx.lineWidth = 4;
-                ctx.stroke();
-
-                // 三日月（月光ゴールド）
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(246, 248, 86, 0, Math.PI * 2);
-                ctx.fillStyle = '#E8D3A2';
-                ctx.fill();
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.beginPath();
-                ctx.arc(286, 224, 78, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-
-                // くり抜かれた部分を背景色で補完するため、もう一度合成
-                ctx.save();
-                ctx.globalCompositeOperation = 'destination-over';
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, 512, 512);
-                ctx.restore();
-
-                // 小さな朝陽のアクセントドット
-                ctx.beginPath();
-                ctx.arc(312, 294, 24, 0, Math.PI * 2);
-                ctx.fillStyle = '#D98A3C';
-                ctx.fill();
-
-                canvas.toBlob((iconBlob) => {
-                    if (!iconBlob) return;
-                    const iconUrl = URL.createObjectURL(iconBlob);
-
-                    // favicon & apple-touch-icon を設定
-                    ['icon', 'apple-touch-icon'].forEach(rel => {
-                        const link = document.createElement('link');
-                        link.rel = rel;
-                        link.href = iconUrl;
-                        document.head.appendChild(link);
-                    });
-
-                    // モーダル内のプレビューにも反映
-                    const preview = document.getElementById('install-icon-preview');
-                    if (preview) {
-                        preview.innerHTML = `<img src="${iconUrl}" alt="Sora & Tsuki アイコン" class="w-full h-full object-cover">`;
-                    }
-
-                    // Web App Manifest を動的生成して登録
-                    const manifest = {
-                        name: 'Sora & Tsuki — 朝と夜のルーティーン',
-                        short_name: 'Sora & Tsuki',
-                        description: '朝と夜のルーティーンを心地よく続けるための管理アプリ',
-                        start_url: window.location.href,
-                        display: 'standalone',
-                        orientation: 'portrait',
-                        background_color: '#090D18',
-                        theme_color: state.period === 'morning' ? '#F6F2EB' : '#090D18',
-                        icons: [
-                            { src: iconUrl, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
-                        ]
-                    };
-                    const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
-                    const manifestUrl = URL.createObjectURL(manifestBlob);
-                    const manifestLink = document.createElement('link');
-                    manifestLink.rel = 'manifest';
-                    manifestLink.href = manifestUrl;
-                    document.head.appendChild(manifestLink);
-                }, 'image/png');
-            } catch (e) {
-                // Blob生成非対応環境ではフォールバック表示を維持
-            }
         }
 
         function openInstallModal() {
+            applyAppIconsAndManifest();
             const t = getThemeClasses();
             const modal = document.getElementById('install-modal');
             const card = document.getElementById('install-modal-card');
@@ -2534,7 +2590,7 @@
                     <ol class="space-y-1.5 opacity-85 list-decimal list-inside">
                         <li>画面下部の <strong>共有ボタン（□に↑）</strong> をタップします</li>
                         <li>メニューを下にスクロールし、<strong>「ホーム画面に追加」</strong> を選びます</li>
-                        <li>右上の <strong>「追加」</strong> をタップするとアイコンが配置されます</li>
+                        <li>上の専用アイコンが表示されていることを確認し、右上の <strong>「追加」</strong> をタップします</li>
                     </ol>
                 </div>
             `;
@@ -2548,14 +2604,14 @@
                     <ol class="space-y-1.5 opacity-85 list-decimal list-inside">
                         <li>ブラウザ右上の <strong>メニュー（⋮）</strong> をタップします</li>
                         <li><strong>「アプリをインストール」</strong> または <strong>「ホーム画面に追加」</strong> を選びます</li>
-                        <li>確認画面で <strong>「追加」</strong> をタップするとアイコンが配置されます</li>
+                        <li>確認画面で <strong>「追加」</strong> をタップすると専用アイコンが配置されます</li>
                     </ol>
                 </div>
             `;
 
             const hostNote = `
                 <p class="text-[11px] ${t.muted} leading-relaxed px-1">
-                    ※ ホーム画面から起動するとアドレスバーが消え、全画面の専用アプリのように使えます。現在プレビュー画面内で開いている場合は、このHTMLファイルをブラウザで直接開くか、GitHub Pages・Netlify等に公開してアクセスすると追加できます。
+                    ※ すでに「S」のアイコンでホーム画面に追加済みの場合は、一度そのアイコンを削除し、GitHub等の公開URLを再読み込みしてからもう一度追加してください。
                 </p>
             `;
 
@@ -2595,6 +2651,9 @@
         /* ==========================================================================
            初期化
            ========================================================================== */
+        // ブラウザがホーム画面追加用のアイコンを早期取得できるよう即時生成
+        applyAppIconsAndManifest();
+
         window.addEventListener('DOMContentLoaded', () => {
             loadState();
             initPwaSupport();
