@@ -1231,7 +1231,12 @@
                     <section class="rounded-[24px] p-5 ${t.card} space-y-3.5">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-medium tracking-wide ${t.muted}">今日の気分とひとこと</span>
-                            <span id="voice-status-today-journal" class="text-[11px] ${todayRec.mood ? t.accentText : 'opacity-45'}">${todayRec.mood ? '記録済み' : '音声入力対応'}</span>
+                            <div class="flex items-center gap-2.5">
+                                ${(todayRec.mood || (todayRec.journal && todayRec.journal.trim())) ? `
+                                    <button onclick="clearDayJournalAndMood('${todayKey}')" class="text-[11px] text-rose-500/80 hover:text-rose-500 transition-colors">消去</button>
+                                ` : ''}
+                                <span id="voice-status-today-journal" class="text-[11px] ${todayRec.mood ? t.accentText : 'opacity-45'}">${todayRec.mood ? '記録済み' : '音声入力対応'}</span>
+                            </div>
                         </div>
                         <div class="grid grid-cols-4 gap-2">
                             ${MOOD_OPTIONS.map(m => {
@@ -1334,13 +1339,26 @@
                                         </div>
                                     </div>
 
-                                    <button onclick="openTaskModal('${task.id}')" class="p-2.5 rounded-full ${t.subtleBg} ${t.muted} hover:opacity-100 transition-opacity flex-shrink-0" aria-label="編集">
-                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                    </button>
+                                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                                        <button onclick="openTaskModal('${task.id}')" class="p-2.5 rounded-full ${t.subtleBg} ${t.muted} hover:opacity-100 transition-opacity" aria-label="編集" title="編集">
+                                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        </button>
+                                        <button onclick="deleteRoutineDirect('${task.id}')" class="p-2.5 rounded-full ${t.subtleBg} text-rose-500/80 hover:text-rose-500 hover:bg-rose-500/10 transition-colors" aria-label="削除" title="削除">
+                                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                        </button>
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
                     `}
+
+                    ${periodRoutines.length > 0 ? `
+                        <div class="pt-2 flex justify-center">
+                            <button onclick="confirmClearPeriodRoutines()" class="text-xs text-rose-500/80 hover:text-rose-500 underline underline-offset-4 transition-colors">
+                                ${t.isMorning ? '朝' : '夜'}のルーティーン項目をすべて削除
+                            </button>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }
@@ -1437,6 +1455,14 @@
                                 ${rest ? 'お休み日 解除' : 'お休み日にする'}
                             </button>
                         </div>
+
+                        ${(mDone > 0 || nDone > 0 || rec.mood || rec.journal || rest) ? `
+                            <div class="pt-2 flex justify-end">
+                                <button onclick="confirmClearDayRecord('${key}')" class="text-[11px] text-rose-500/80 hover:text-rose-500 transition-colors">
+                                    この日の記録を消去する
+                                </button>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             }
@@ -1596,7 +1622,7 @@
                                                 <span>${entry.dateLabel}</span>
                                                 ${moodObj ? `<span class="inline-flex items-center gap-1">${moodObj.icon} ${moodObj.label}</span>` : ''}
                                             </div>
-                                            ${entry.journal ? `<p class="text-xs leading-relaxed opacity-90">${escapeHtml(entry.journal)}</p>` : ''}
+                                            ${entry.journal ? `<p class="text-xs leading-relaxed">${escapeHtml(entry.journal)}</p>` : ''}
                                         </div>
                                     `;
                                 }).join('')}
@@ -1604,10 +1630,18 @@
                         </section>
                     ` : ''}
 
-                    <!-- フッター操作 -->
-                    <div class="flex items-center justify-center pt-1 pb-2 text-xs ${t.muted}">
-                        <button onclick="confirmResetApp()" class="underline opacity-55 hover:opacity-100 transition-opacity">初期サンプルデータに戻す</button>
-                    </div>
+                    <!-- データ管理（テストデータの完全消去 / サンプル復元） -->
+                    <section class="rounded-[24px] p-4 ${t.card} flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                        <span class="${t.muted}">データ管理</span>
+                        <div class="flex items-center gap-2 flex-wrap justify-center">
+                            <button onclick="confirmClearAllData()" class="px-3.5 py-2 rounded-full border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 transition-colors font-medium">
+                                すべてのデータを消去
+                            </button>
+                            <button onclick="confirmResetApp()" class="px-3.5 py-2 rounded-full ${t.subtleBg} ${t.muted} hover:opacity-100 transition-opacity">
+                                サンプルに戻す
+                            </button>
+                        </div>
+                    </section>
                 </div>
             `;
         }
@@ -1705,6 +1739,45 @@
             saveState();
             render();
             showToast(rec.restDay ? 'お休み日に設定しました（連続記録が守られます）' : 'お休み日を解除しました');
+        }
+
+        function clearDayJournalAndMood(dateKey) {
+            if (!state.history[dateKey]) return;
+            state.history[dateKey].mood = null;
+            state.history[dateKey].journal = '';
+            saveState();
+            render();
+            showToast('今日の気分とひとことを消去しました');
+        }
+
+        function confirmClearDayRecord(dateKey) {
+            openConfirmModal('この日の記録を消去', '選択した日の達成チェック・気分・ひとことを消去しますか？', () => {
+                delete state.history[dateKey];
+                saveState();
+                render();
+                showToast('この日の記録を消去しました');
+            });
+        }
+
+        function deleteRoutineDirect(taskId) {
+            const task = state.routines.find(r => r.id === taskId);
+            if (!task) return;
+            openConfirmModal('項目の削除', `「${task.title}」を削除しますか？`, () => {
+                state.routines = state.routines.filter(r => r.id !== taskId);
+                saveState();
+                render();
+                showToast('項目を削除しました');
+            });
+        }
+
+        function confirmClearPeriodRoutines() {
+            const label = state.period === 'morning' ? '朝' : '夜';
+            openConfirmModal(`${label}の項目をすべて削除`, `${label}に登録されているルーティーン項目をすべて削除しますか？`, () => {
+                state.routines = state.routines.filter(r => r.period !== state.period);
+                saveState();
+                render();
+                showToast(`${label}の項目をすべて削除しました`);
+            });
         }
 
         function moveRoutine(taskId, direction) {
@@ -1896,13 +1969,23 @@
         }
 
         function confirmResetApp() {
-            openConfirmModal('データの初期化', '現在のルーティーンと記録をリセットし、初期サンプルに戻しますか？', () => {
+            openConfirmModal('サンプルデータに戻す', '現在のルーティーンと記録をリセットし、初期サンプルに戻しますか？', () => {
                 const defaults = createDefaultData();
                 state.routines = defaults.routines;
                 state.history = defaults.history;
                 saveState();
                 render();
-                showToast('初期データに戻しました');
+                showToast('初期サンプルデータに戻しました');
+            });
+        }
+
+        function confirmClearAllData() {
+            openConfirmModal('すべてのデータを消去', '登録したルーティーン項目とすべての記録を消去し、空の状態にしますか？', () => {
+                state.routines = [];
+                state.history = {};
+                saveState();
+                render();
+                showToast('すべてのデータを消去しました');
             });
         }
 
@@ -2223,442 +2306,4 @@
                     statusEl.textContent = listening ? '聴き取っています…' : '音声入力対応';
                 }
             } else if (targetId === 'task-title-input') {
-                const hintEl = document.getElementById('voice-hint-task-title');
-                if (hintEl) {
-                    hintEl.textContent = listening ? '話しかけてください…' : '「白湯を飲む 5分」のように話せます';
-                }
-            }
-        }
-
-        function stopVoiceInput() {
-            if (voiceState.recognition) {
-                try {
-                    voiceState.recognition.stop();
-                } catch (e) {}
-            }
-            if (voiceState.activeTargetId) {
-                setVoiceButtonUI(voiceState.activeTargetId, false);
-            }
-            voiceState.isListening = false;
-            voiceState.activeTargetId = null;
-            voiceState.recognition = null;
-        }
-
-        function normalizeDigits(str) {
-            return str.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
-        }
-
-        function toggleVoiceInput(targetId, options = {}) {
-            const SpeechRecognition = getSpeechRecognitionCtor();
-            if (!SpeechRecognition) {
-                showToast('お使いのブラウザは音声入力に対応していません（Chrome / Safari推奨）');
-                return;
-            }
-
-            // 同じ入力欄で録音中なら停止
-            if (voiceState.isListening && voiceState.activeTargetId === targetId) {
-                stopVoiceInput();
-                return;
-            }
-
-            // 別の入力欄で録音中なら一度停止
-            if (voiceState.isListening) {
-                stopVoiceInput();
-            }
-
-            const inputEl = document.getElementById(targetId);
-            if (!inputEl) return;
-
-            try {
-                const recognition = new SpeechRecognition();
-                recognition.lang = 'ja-JP';
-                recognition.interimResults = true;
-                recognition.continuous = false;
-                recognition.maxAlternatives = 1;
-
-                voiceState.recognition = recognition;
-                voiceState.activeTargetId = targetId;
-                voiceState.isListening = true;
-                voiceState.options = options;
-                voiceState.baseText = inputEl.value.trim();
-                voiceState.finalRecognized = '';
-
-                setVoiceButtonUI(targetId, true);
-                showToast('音声入力を開始しました。お話しください');
-
-                recognition.onresult = (event) => {
-                    let interimTranscript = '';
-                    let finalTranscript = '';
-                    for (let i = event.resultIndex; i < event.results.length; i++) {
-                        const transcript = event.results[i][0].transcript;
-                        if (event.results[i].isFinal) {
-                            finalTranscript += transcript;
-                        } else {
-                            interimTranscript += transcript;
-                        }
-                    }
-
-                    if (finalTranscript) {
-                        voiceState.finalRecognized += finalTranscript;
-                    }
-
-                    const spoken = (voiceState.finalRecognized + interimTranscript).trim();
-                    const el = document.getElementById(targetId);
-                    if (!el) return;
-
-                    // 既存テキストがある場合はスペースを挟んで追記（項目名が空ならそのまま）
-                    const combined = voiceState.baseText && spoken
-                        ? `${voiceState.baseText} ${spoken}`
-                        : (spoken || voiceState.baseText);
-                    const maxLen = parseInt(el.getAttribute('maxlength'), 10) || 80;
-                    el.value = combined.slice(0, maxLen);
-                };
-
-                recognition.onerror = (event) => {
-                    let msg = '音声の認識を中断しました';
-                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-                        msg = 'マイクの使用が許可されていません。ブラウザの設定をご確認ください';
-                    } else if (event.error === 'no-speech') {
-                        msg = '音声が検出されませんでした。もう一度お試しください';
-                    } else if (event.error === 'network') {
-                        msg = 'ネットワークエラーにより音声認識できませんでした';
-                    }
-                    showToast(msg);
-                    stopVoiceInput();
-                };
-
-                recognition.onend = () => {
-                    const finishedTarget = voiceState.activeTargetId;
-                    const finishedOptions = voiceState.options || {};
-                    const recognizedText = voiceState.finalRecognized.trim();
-
-                    if (finishedTarget) {
-                        setVoiceButtonUI(finishedTarget, false);
-                    }
-                    voiceState.isListening = false;
-                    voiceState.activeTargetId = null;
-                    voiceState.recognition = null;
-
-                    const el = finishedTarget ? document.getElementById(finishedTarget) : null;
-                    if (!el || !recognizedText) return;
-
-                    // 項目名に「10分」などが含まれていれば所要時間を自動抽出
-                    if (finishedOptions.parseDuration) {
-                        const normalized = normalizeDigits(el.value);
-                        const match = normalized.match(/(\d{1,3})\s*分/);
-                        if (match) {
-                            const mins = Math.max(1, Math.min(180, parseInt(match[1], 10)));
-                            const durationInput = document.getElementById('task-duration-input');
-                            if (durationInput) durationInput.value = mins;
-                            const cleanedTitle = normalized.replace(/\s*\d{1,3}\s*分\s*/, ' ').trim();
-                            if (cleanedTitle) el.value = cleanedTitle;
-                            showToast(`音声入力を反映しました（所要時間 ${mins}分）`);
-                            return;
-                        }
-                    }
-
-                    // 今日のひとことメモは音声認識完了時に自動保存
-                    if (finishedOptions.autoSaveJournalDate) {
-                        saveDayJournal(finishedOptions.autoSaveJournalDate, finishedTarget);
-                        return;
-                    }
-
-                    playCheckSound();
-                    showToast('音声入力を反映しました');
-                };
-
-                recognition.start();
-            } catch (e) {
-                showToast('音声入力を開始できませんでした');
-                stopVoiceInput();
-            }
-        }
-
-        /* ==========================================================================
-           ホーム画面起動（PWA / モバイルWebアプリ）サポート
-           ========================================================================== */
-        let deferredInstallPrompt = null;
-        let cachedAppIconDataUrl = '';
-
-        function isStandaloneMode() {
-            return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-        }
-
-        function detectMobileOS() {
-            const ua = navigator.userAgent || '';
-            if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
-                return 'ios';
-            }
-            if (/Android/i.test(ua)) {
-                return 'android';
-            }
-            return 'other';
-        }
-
-        // 4芒星（ダイヤ型のきらめき）を描画するヘルパー
-        function drawSparkleStar(ctx, cx, cy, outerR, innerR, color) {
-            ctx.save();
-            ctx.beginPath();
-            for (let i = 0; i < 8; i++) {
-                const r = i % 2 === 0 ? outerR : innerR;
-                const angle = (i * Math.PI) / 4 - Math.PI / 2;
-                const x = cx + Math.cos(angle) * r;
-                const y = cy + Math.sin(angle) * r;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            ctx.closePath();
-            ctx.fillStyle = color;
-            ctx.fill();
-            ctx.restore();
-        }
-
-        // 洗練された「Sora & Tsuki」アプリアイコン(PNG Data URL)を同期生成
-        function buildAppIconDataUrl() {
-            if (cachedAppIconDataUrl) return cachedAppIconDataUrl;
-            try {
-                const size = 512;
-                const canvas = document.createElement('canvas');
-                canvas.width = size;
-                canvas.height = size;
-                const ctx = canvas.getContext('2d');
-
-                // 1. 夜空から暁へと移ろう深いグラデーション背景
-                const bgGrad = ctx.createLinearGradient(0, 0, size, size);
-                bgGrad.addColorStop(0, '#0B1121');
-                bgGrad.addColorStop(0.55, '#19223C');
-                bgGrad.addColorStop(1, '#432D28');
-                ctx.fillStyle = bgGrad;
-                ctx.fillRect(0, 0, size, size);
-
-                // 2. 月光と朝陽が溶け合う柔らかなアンビエント光
-                const moonAura = ctx.createRadialGradient(225, 225, 10, 225, 225, 220);
-                moonAura.addColorStop(0, 'rgba(236, 214, 166, 0.28)');
-                moonAura.addColorStop(1, 'rgba(236, 214, 166, 0)');
-                ctx.fillStyle = moonAura;
-                ctx.fillRect(0, 0, size, size);
-
-                const sunAura = ctx.createRadialGradient(315, 305, 10, 315, 305, 175);
-                sunAura.addColorStop(0, 'rgba(226, 138, 66, 0.34)');
-                sunAura.addColorStop(1, 'rgba(226, 138, 66, 0)');
-                ctx.fillStyle = sunAura;
-                ctx.fillRect(0, 0, size, size);
-
-                // 3. 天球儀をイメージした二重の繊細なゴールドリング
-                ctx.beginPath();
-                ctx.arc(256, 256, 176, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(232, 207, 160, 0.34)';
-                ctx.lineWidth = 2.5;
-                ctx.stroke();
-
-                ctx.save();
-                ctx.setLineDash([4, 10]);
-                ctx.beginPath();
-                ctx.arc(256, 256, 162, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(232, 207, 160, 0.22)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                ctx.restore();
-
-                // 4. なめらかなベジェ曲線で描くシャンパンゴールドの三日月
-                ctx.save();
-                ctx.shadowColor = 'rgba(245, 225, 180, 0.45)';
-                ctx.shadowBlur = 24;
-                const moonGrad = ctx.createLinearGradient(170, 150, 290, 340);
-                moonGrad.addColorStop(0, '#F7E7C4');
-                moonGrad.addColorStop(1, '#D3AE6E');
-                ctx.fillStyle = moonGrad;
-
-                ctx.beginPath();
-                ctx.moveTo(278, 156);
-                ctx.bezierCurveTo(192, 164, 158, 242, 186, 308);
-                ctx.bezierCurveTo(212, 366, 286, 382, 336, 344);
-                ctx.bezierCurveTo(274, 356, 222, 316, 218, 256);
-                ctx.bezierCurveTo(214, 202, 244, 168, 278, 156);
-                ctx.closePath();
-                ctx.fill();
-                ctx.restore();
-
-                // 5. 三日月の懐に寄り添うテラコッタ・アンバーの朝陽オーブ
-                ctx.save();
-                ctx.shadowColor = 'rgba(232, 146, 72, 0.55)';
-                ctx.shadowBlur = 22;
-                const sunGrad = ctx.createLinearGradient(272, 232, 336, 304);
-                sunGrad.addColorStop(0, '#F2A65A');
-                sunGrad.addColorStop(1, '#C86928');
-                ctx.beginPath();
-                ctx.arc(304, 266, 36, 0, Math.PI * 2);
-                ctx.fillStyle = sunGrad;
-                ctx.fill();
-                ctx.restore();
-
-                // 6. 静かに瞬く星々のアクセント
-                drawSparkleStar(ctx, 326, 182, 13, 3.2, 'rgba(247, 231, 196, 0.92)');
-                drawSparkleStar(ctx, 182, 186, 7, 1.8, 'rgba(247, 231, 196, 0.65)');
-                ctx.beginPath();
-                ctx.arc(352, 222, 2.8, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(247, 231, 196, 0.75)';
-                ctx.fill();
-
-                cachedAppIconDataUrl = canvas.toDataURL('image/png');
-                return cachedAppIconDataUrl;
-            } catch (e) {
-                return '';
-            }
-        }
-
-        // iOS Safari / Android Chrome 両対応のアイコン＆マニフェスト即時登録
-        function applyAppIconsAndManifest() {
-            const iconDataUrl = buildAppIconDataUrl();
-            if (!iconDataUrl) return;
-
-            const appleIcon = document.getElementById('apple-touch-icon');
-            if (appleIcon) appleIcon.setAttribute('href', iconDataUrl);
-
-            const favicon = document.getElementById('favicon-link');
-            if (favicon) favicon.setAttribute('href', iconDataUrl);
-
-            const preview = document.getElementById('install-icon-preview');
-            if (preview) {
-                preview.innerHTML = `<img src="${iconDataUrl}" alt="Sora & Tsuki アイコン" class="w-full h-full object-cover">`;
-            }
-
-            try {
-                const startUrl = window.location.href.split('#')[0];
-                const manifest = {
-                    name: 'Sora & Tsuki — 朝と夜のルーティーン',
-                    short_name: 'Sora & Tsuki',
-                    description: '朝と夜のルーティーンを心地よく続けるための管理アプリ',
-                    start_url: startUrl,
-                    display: 'standalone',
-                    orientation: 'portrait',
-                    background_color: '#0B1121',
-                    theme_color: state.period === 'morning' ? '#F6F2EB' : '#090D18',
-                    icons: [
-                        { src: iconDataUrl, sizes: '512x512', type: 'image/png', purpose: 'any' },
-                        { src: iconDataUrl, sizes: '192x192', type: 'image/png', purpose: 'any' }
-                    ]
-                };
-                const manifestDataUrl = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
-                const manifestLink = document.getElementById('manifest-link');
-                if (manifestLink) manifestLink.setAttribute('href', manifestDataUrl);
-            } catch (e) {}
-        }
-
-        function initPwaSupport() {
-            applyAppIconsAndManifest();
-
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredInstallPrompt = e;
-            });
-
-            window.addEventListener('appinstalled', () => {
-                deferredInstallPrompt = null;
-                closeInstallModal();
-                applyTheme();
-                showToast('ホーム画面に追加されました');
-            });
-        }
-
-        function openInstallModal() {
-            applyAppIconsAndManifest();
-            const t = getThemeClasses();
-            const modal = document.getElementById('install-modal');
-            const card = document.getElementById('install-modal-card');
-            card.className = `w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-fade-up space-y-5 max-h-[90vh] overflow-y-auto ${t.isMorning ? 'bg-[#FAF7F2] text-morning-text' : 'bg-[#131A2C] text-night-text border border-slate-700/80'}`;
-
-            const nativeSection = document.getElementById('native-install-section');
-            const nativeBtn = document.getElementById('native-install-btn');
-            if (deferredInstallPrompt) {
-                nativeSection.classList.remove('hidden');
-                nativeBtn.className = `w-full py-3.5 px-5 rounded-2xl text-sm font-medium text-white shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${t.accentBg}`;
-            } else {
-                nativeSection.classList.add('hidden');
-            }
-
-            const os = detectMobileOS();
-            const stepsContainer = document.getElementById('install-guide-steps');
-            const stepBoxClass = `p-4 rounded-2xl ${t.subtleBg} space-y-2.5`;
-
-            const iosGuide = `
-                <div class="${stepBoxClass}">
-                    <div class="font-medium flex items-center gap-2">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] ${t.accentSoft}">iPhone / Safari</span>
-                        <span>ホーム画面への追加手順</span>
-                    </div>
-                    <ol class="space-y-1.5 opacity-85 list-decimal list-inside">
-                        <li>画面下部の <strong>共有ボタン（□に↑）</strong> をタップします</li>
-                        <li>メニューを下にスクロールし、<strong>「ホーム画面に追加」</strong> を選びます</li>
-                        <li>上の専用アイコンが表示されていることを確認し、右上の <strong>「追加」</strong> をタップします</li>
-                    </ol>
-                </div>
-            `;
-
-            const androidGuide = `
-                <div class="${stepBoxClass}">
-                    <div class="font-medium flex items-center gap-2">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] ${t.accentSoft}">Android / Chrome</span>
-                        <span>ホーム画面への追加手順</span>
-                    </div>
-                    <ol class="space-y-1.5 opacity-85 list-decimal list-inside">
-                        <li>ブラウザ右上の <strong>メニュー（⋮）</strong> をタップします</li>
-                        <li><strong>「アプリをインストール」</strong> または <strong>「ホーム画面に追加」</strong> を選びます</li>
-                        <li>確認画面で <strong>「追加」</strong> をタップすると専用アイコンが配置されます</li>
-                    </ol>
-                </div>
-            `;
-
-            const hostNote = `
-                <p class="text-[11px] ${t.muted} leading-relaxed px-1">
-                    ※ すでに「S」のアイコンでホーム画面に追加済みの場合は、一度そのアイコンを削除し、GitHub等の公開URLを再読み込みしてからもう一度追加してください。
-                </p>
-            `;
-
-            if (os === 'ios') {
-                stepsContainer.innerHTML = iosGuide + hostNote;
-            } else if (os === 'android') {
-                stepsContainer.innerHTML = androidGuide + hostNote;
-            } else {
-                stepsContainer.innerHTML = iosGuide + androidGuide + hostNote;
-            }
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeInstallModal() {
-            const modal = document.getElementById('install-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        async function triggerNativeInstall() {
-            if (!deferredInstallPrompt) return;
-            try {
-                deferredInstallPrompt.prompt();
-                const choice = await deferredInstallPrompt.userChoice;
-                if (choice && choice.outcome === 'accepted') {
-                    showToast('インストールを開始しました');
-                }
-                deferredInstallPrompt = null;
-                closeInstallModal();
-            } catch (e) {
-                showToast('ブラウザのメニューから「ホーム画面に追加」をお試しください');
-            }
-        }
-
-        /* ==========================================================================
-           初期化
-           ========================================================================== */
-        // ブラウザがホーム画面追加用のアイコンを早期取得できるよう即時生成
-        applyAppIconsAndManifest();
-
-        window.addEventListener('DOMContentLoaded', () => {
-            loadState();
-            initPwaSupport();
-            render();
-        });
-    </script>
-</body>
-</html>
+                const hintEl = document.getElementById('voice-hint-task-
