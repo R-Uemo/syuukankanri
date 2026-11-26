@@ -32,23 +32,23 @@
                     colors: {
                         morning: {
                             bg: '#F6F2EB',
-                            card: 'rgba(255, 255, 255, 0.76)',
-                            subtle: 'rgba(235, 228, 217, 0.65)',
+                            card: 'rgba(255, 255, 255, 0.78)',
+                            subtle: 'rgba(235, 228, 217, 0.68)',
                             text: '#231F1B',
                             muted: '#787067',
                             accent: '#BE6E32',
                             gold: '#D89B52',
-                            accentSoft: 'rgba(190, 110, 50, 0.11)',
+                            accentSoft: 'rgba(190, 110, 50, 0.12)',
                         },
                         night: {
                             bg: '#090D18',
-                            card: 'rgba(20, 27, 45, 0.72)',
-                            subtle: 'rgba(34, 45, 72, 0.65)',
+                            card: 'rgba(20, 27, 45, 0.74)',
+                            subtle: 'rgba(34, 45, 72, 0.68)',
                             text: '#EDF0F7',
                             muted: '#8E9BB5',
                             accent: '#90A2FF',
                             gold: '#DFC58E',
-                            accentSoft: 'rgba(144, 162, 255, 0.14)',
+                            accentSoft: 'rgba(144, 162, 255, 0.15)',
                         }
                     }
                 }
@@ -94,23 +94,23 @@
 
         /* 繊細なガラス質感 */
         .glass-morning {
-            background: rgba(255, 255, 255, 0.74);
+            background: rgba(255, 255, 255, 0.76);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.88);
             box-shadow: 0 8px 32px -12px rgba(68, 52, 34, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
         .glass-night {
-            background: rgba(20, 27, 45, 0.68);
+            background: rgba(20, 27, 45, 0.72);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(148, 163, 184, 0.14);
+            border: 1px solid rgba(148, 163, 184, 0.15);
             box-shadow: 0 12px 36px -12px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
         /* プログレスリング＆天体アニメーション */
         .progress-ring-circle {
-            transition: stroke-dashoffset 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: stroke-dashoffset 0.35s linear;
             transform: rotate(-90deg);
             transform-origin: 50% 50%;
         }
@@ -171,7 +171,10 @@
             bottom: calc(1rem + env(safe-area-inset-bottom));
         }
         .safe-bottom-space {
-            padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+            padding-bottom: calc(7.25rem + env(safe-area-inset-bottom));
+        }
+        .safe-modal-bottom {
+            padding-bottom: calc(1.75rem + env(safe-area-inset-bottom));
         }
     </style>
 </head>
@@ -189,34 +192,36 @@
         
         <!-- ヘッダー -->
         <header class="sticky top-0 z-30 px-5 safe-top pb-3 transition-colors duration-500" id="main-header">
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center justify-between gap-2">
                 <!-- ブランド・日付 -->
-                <div>
-                    <div class="flex items-center gap-2">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
                         <span id="header-greeting" class="font-serif italic text-xs tracking-[0.18em] uppercase opacity-70">Good Morning</span>
                         <span class="w-1 h-1 rounded-full bg-current opacity-30"></span>
-                        <span id="header-date" class="text-[11px] tracking-wide opacity-60"></span>
+                        <span id="header-date" class="text-[11px] tracking-wide opacity-60 truncate"></span>
                     </div>
                     <h1 class="font-serif text-2xl font-medium tracking-wide mt-0.5 leading-none">
                         Sora <span class="italic font-normal opacity-60">&amp;</span> Tsuki
                     </h1>
                 </div>
 
-                <!-- 朝・夜 切り替えセグメント & サウンド切替 & ホーム画面追加 -->
-                <div class="flex items-center gap-1.5 sm:gap-2">
+                <!-- 朝・夜 切り替えセグメント（状態インジケーター付） & サウンド切替 & ホーム画面追加 -->
+                <div class="flex items-center gap-1.5 flex-shrink-0">
                     <button id="install-app-btn" onclick="openInstallModal()" title="ホーム画面に追加" class="p-2.5 rounded-full transition-all duration-300 focus:outline-none" aria-label="ホーム画面に追加">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/><path d="M12 7v6"/><path d="m9 10 3 3 3-3"/></svg>
                     </button>
                     <button id="sound-toggle-btn" onclick="toggleSound()" title="効果音のオン/オフ" class="p-2.5 rounded-full transition-all duration-300 focus:outline-none" aria-label="サウンド切替">
                     </button>
                     <div id="period-switcher" class="flex p-1 rounded-full border transition-all duration-300">
-                        <button onclick="setPeriod('morning')" id="btn-period-morning" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-300">
+                        <button onclick="setPeriod('morning')" id="btn-period-morning" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
                             <span>朝</span>
+                            <span id="indicator-morning" class="inline-flex items-center justify-center"></span>
                         </button>
-                        <button onclick="setPeriod('night')" id="btn-period-night" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-300">
+                        <button onclick="setPeriod('night')" id="btn-period-night" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                             <span>夜</span>
+                            <span id="indicator-night" class="inline-flex items-center justify-center"></span>
                         </button>
                     </div>
                 </div>
@@ -250,8 +255,8 @@
     </div>
 
     <!-- タスク追加・編集モーダル -->
-    <div id="task-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
-        <div id="task-modal-card" class="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-fade-up max-h-[90vh] overflow-y-auto">
+    <div id="task-modal" onclick="handleModalBackdropClick(event, closeTaskModal)" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
+        <div id="task-modal-card" class="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 safe-modal-bottom sm:pb-6 shadow-2xl animate-fade-up max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-5">
                 <h2 id="modal-title" class="font-mincho text-lg font-medium tracking-wide">ルーティーンを追加</h2>
                 <button onclick="closeTaskModal()" class="p-2 rounded-full opacity-60 hover:opacity-100 transition-opacity" aria-label="閉じる">
@@ -277,17 +282,22 @@
                     </div>
                 </div>
 
-                <!-- タイトル -->
+                <!-- タイトル（クリアボタン＆音声入力付） -->
                 <div>
                     <div class="flex items-center justify-between mb-1.5">
                         <label for="task-title-input" class="text-xs font-medium opacity-70">項目名</label>
                         <span id="voice-hint-task-title" class="text-[11px] opacity-50">「白湯を飲む 5分」のように話せます</span>
                     </div>
                     <div class="relative flex items-center">
-                        <input type="text" id="task-title-input" required maxlength="40" placeholder="例：白湯を飲む、ストレッチをする" class="w-full pl-4 pr-12 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 transition-all">
-                        <button type="button" id="voice-btn-task-title" onclick="toggleVoiceInput('task-title-input', { parseDuration: true })" title="音声で入力" aria-label="項目名を音声で入力" class="absolute right-2 p-2 rounded-xl transition-all opacity-75 hover:opacity-100">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-                        </button>
+                        <input type="text" id="task-title-input" oninput="syncInputClearBtn('task-title-input')" required maxlength="40" placeholder="例：白湯を飲む、ストレッチをする" class="w-full pl-4 pr-20 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 transition-all">
+                        <div class="absolute right-2 flex items-center gap-0.5">
+                            <button type="button" id="clear-btn-task-title-input" onclick="clearTextInput('task-title-input')" title="入力をクリア" aria-label="入力をクリア" class="hidden p-1.5 rounded-lg opacity-45 hover:opacity-90 transition-opacity">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                            <button type="button" id="voice-btn-task-title" onclick="toggleVoiceInput('task-title-input', { parseDuration: true })" title="音声で入力" aria-label="項目名を音声で入力" class="p-2 rounded-xl transition-all opacity-75 hover:opacity-100">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -295,7 +305,7 @@
                 <div>
                     <div class="flex items-center justify-between mb-1.5">
                         <label for="task-duration-input" class="text-xs font-medium opacity-70">所要時間（分）</label>
-                        <span class="text-[11px] opacity-55">タイマーの目安になります</span>
+                        <span class="text-[11px] opacity-55">完了予定時刻の計算に使われます</span>
                     </div>
                     <div class="flex items-center gap-2 mb-2">
                         <input type="number" id="task-duration-input" required min="1" max="180" value="5" class="w-24 px-3.5 py-2.5 rounded-2xl border text-sm font-medium text-center focus:outline-none focus:ring-2">
@@ -308,6 +318,19 @@
                             <button type="button" onclick="setDurationPreset(30)" class="px-2.5 py-1.5 rounded-xl text-xs border opacity-75 hover:opacity-100 transition-opacity">30分</button>
                         </div>
                     </div>
+                </div>
+
+                <!-- コア（必須）習慣設定（ビジネスマン視点の継続工夫） -->
+                <div class="flex items-center justify-between p-3.5 rounded-2xl border border-current/15">
+                    <div class="pr-3">
+                        <div class="text-xs font-medium flex items-center gap-1.5">
+                            <span>コア習慣（必須項目）に設定</span>
+                        </div>
+                        <p class="text-[11px] opacity-60 mt-0.5 leading-snug">時間がない日に「時短モード」で絞り込めます</p>
+                    </div>
+                    <button type="button" id="form-core-toggle" onclick="toggleFormCore()" role="switch" aria-checked="false" class="w-12 h-7 rounded-full p-1 transition-colors duration-300 flex items-center flex-shrink-0 bg-stone-400/30">
+                        <span id="form-core-knob" class="w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-300 translate-x-0"></span>
+                    </button>
                 </div>
 
                 <!-- 実施する曜日 -->
@@ -324,14 +347,19 @@
                     <p id="days-error" class="text-xs text-rose-500 mt-1.5 hidden">少なくとも1つの曜日を選択してください。</p>
                 </div>
 
-                <!-- メモ（任意） -->
+                <!-- メモ（任意・クリアボタン＆音声入力付） -->
                 <div>
                     <label for="task-note-input" class="block text-xs font-medium opacity-70 mb-1.5">ひとことメモ（任意）</label>
                     <div class="relative flex items-center">
-                        <input type="text" id="task-note-input" maxlength="60" placeholder="例：深呼吸しながらゆっくり行う" class="w-full pl-4 pr-12 py-2.5 rounded-2xl border text-sm focus:outline-none focus:ring-2 transition-all">
-                        <button type="button" id="voice-btn-task-note" onclick="toggleVoiceInput('task-note-input')" title="音声で入力" aria-label="メモを音声で入力" class="absolute right-2 p-1.5 rounded-xl transition-all opacity-75 hover:opacity-100">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-                        </button>
+                        <input type="text" id="task-note-input" oninput="syncInputClearBtn('task-note-input')" maxlength="60" placeholder="例：深呼吸しながらゆっくり行う" class="w-full pl-4 pr-20 py-2.5 rounded-2xl border text-sm focus:outline-none focus:ring-2 transition-all">
+                        <div class="absolute right-2 flex items-center gap-0.5">
+                            <button type="button" id="clear-btn-task-note-input" onclick="clearTextInput('task-note-input')" title="入力をクリア" aria-label="メモをクリア" class="hidden p-1.5 rounded-lg opacity-45 hover:opacity-90 transition-opacity">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                            <button type="button" id="voice-btn-task-note" onclick="toggleVoiceInput('task-note-input')" title="音声で入力" aria-label="メモを音声で入力" class="p-1.5 rounded-xl transition-all opacity-75 hover:opacity-100">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -349,7 +377,7 @@
     </div>
 
     <!-- 確認ダイアログ（alert/confirm代替） -->
-    <div id="confirm-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/55 backdrop-blur-sm p-4">
+    <div id="confirm-modal" onclick="handleModalBackdropClick(event, closeConfirmModal)" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/55 backdrop-blur-sm p-4">
         <div id="confirm-modal-card" class="w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-fade-up text-center space-y-4">
             <h3 id="confirm-title" class="font-mincho text-base font-medium">確認</h3>
             <p id="confirm-message" class="text-xs opacity-75 leading-relaxed"></p>
@@ -360,9 +388,41 @@
         </div>
     </div>
 
+    <!-- バックアップ・復元モーダル -->
+    <div id="backup-modal" onclick="handleModalBackdropClick(event, closeBackupModal)" class="fixed inset-0 z-[60] hidden items-end sm:items-center justify-center bg-black/55 backdrop-blur-sm p-0 sm:p-4">
+        <div id="backup-modal-card" class="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 safe-modal-bottom sm:pb-6 shadow-2xl animate-fade-up space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-mincho text-base font-medium">データのバックアップと復元</h3>
+                    <p class="text-[11px] opacity-65 mt-0.5">機種変更やブラウザ移行時のデータ引き継ぎ用</p>
+                </div>
+                <button onclick="closeBackupModal()" class="p-2 rounded-full opacity-60 hover:opacity-100 transition-opacity" aria-label="閉じる">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <label for="backup-json-textarea" class="text-xs font-medium opacity-75">バックアップデータ（JSON）</label>
+                    <button type="button" onclick="copyBackupToClipboard()" class="text-xs font-medium underline underline-offset-4 opacity-90 hover:opacity-100">
+                        すべてコピー
+                    </button>
+                </div>
+                <textarea id="backup-json-textarea" rows="5" placeholder="ここにバックアップデータを貼り付けて「復元する」を押してください" class="w-full p-3.5 rounded-2xl border text-xs font-mono focus:outline-none focus:ring-2 transition-all"></textarea>
+            </div>
+
+            <div class="flex gap-2.5 pt-1">
+                <button type="button" onclick="closeBackupModal()" class="flex-1 py-3 rounded-2xl border text-xs font-medium opacity-80 hover:opacity-100 transition-opacity">閉じる</button>
+                <button type="button" id="restore-backup-btn" onclick="applyBackupRestore()" class="flex-1 py-3 rounded-2xl text-xs font-medium text-white shadow-sm transition-all active:scale-[0.98]">
+                    貼り付けた内容で復元
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ホーム画面に追加（PWAインストール）ガイドモーダル -->
-    <div id="install-modal" class="fixed inset-0 z-[60] hidden items-end sm:items-center justify-center bg-black/55 backdrop-blur-sm p-0 sm:p-4">
-        <div id="install-modal-card" class="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-fade-up space-y-5 max-h-[90vh] overflow-y-auto">
+    <div id="install-modal" onclick="handleModalBackdropClick(event, closeInstallModal)" class="fixed inset-0 z-[60] hidden items-end sm:items-center justify-center bg-black/55 backdrop-blur-sm p-0 sm:p-4">
+        <div id="install-modal-card" class="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 safe-modal-bottom sm:pb-6 shadow-2xl animate-fade-up space-y-5 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3.5">
                     <div id="install-icon-preview" class="w-14 h-14 rounded-[16px] overflow-hidden shadow-lg flex-shrink-0 flex items-center justify-center bg-[#12192E] ring-1 ring-white/15">
@@ -399,10 +459,11 @@
     <!-- タイマー付きガイドモード（Focus Mode オーバーレイ） -->
     <div id="focus-overlay" class="fixed inset-0 z-50 hidden flex-col justify-between p-6 sm:p-8 transition-colors duration-500 overflow-y-auto">
         <!-- トップバー -->
-        <div class="max-w-md w-full mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
+        <div class="max-w-md w-full mx-auto flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
                 <span id="focus-badge" class="text-[11px] font-medium px-3 py-1 rounded-full tracking-wide">ガイドモード</span>
                 <span id="focus-step-counter" class="font-serif text-sm opacity-65">1 / 5</span>
+                <span id="focus-eta-badge" class="text-[11px] opacity-60 tabular-nums"></span>
             </div>
             <button onclick="closeFocusMode()" class="p-2.5 rounded-full opacity-70 hover:opacity-100 transition-opacity" aria-label="ガイドモードを終了">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -424,7 +485,7 @@
                 </svg>
                 <div class="absolute inset-0 flex flex-col items-center justify-center">
                     <span id="focus-timer-display" class="font-serif text-6xl font-light tracking-tight tabular-nums">05:00</span>
-                    <span id="focus-timer-status" class="text-[11px] tracking-wider opacity-55 mt-2">タップして開始</span>
+                    <span id="focus-timer-status" class="text-[11px] tracking-wider opacity-55 mt-2">進行中</span>
                 </div>
             </div>
 
@@ -455,7 +516,7 @@
     </div>
 
     <!-- トースト通知 -->
-    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-[70] px-5 py-2.5 rounded-full text-xs font-medium shadow-xl opacity-0 pointer-events-none transition-all duration-300 translate-y-[-8px]">
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-[70] px-5 py-2.5 rounded-full text-xs font-medium shadow-xl opacity-0 pointer-events-none transition-all duration-300 translate-y-[-8px] max-w-[90vw] text-center">
     </div>
 
     <script>
@@ -479,7 +540,6 @@
             '明日の自分のために、今夜を優しく整えておきましょう。'
         ];
 
-        // 気分オプション（振り返り＆習慣への愛着形成）
         const MOOD_OPTIONS = [
             { id: 'calm', label: '穏やか', icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 12c2-3 5-3 7 0s5 3 7 0 5-3 6 0"/><path d="M2 17c2-3 5-3 7 0s5 3 7 0 5-3 6 0"/></svg>' },
             { id: 'energized', label: '充実', icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>' },
@@ -491,8 +551,8 @@
             period: 'morning',
             tab: 'today',
             soundEnabled: true,
+            quickMode: false, // 時短モード（コア習慣のみ表示）
             routines: [],
-            // history[YYYY-MM-DD]: { morning: string[], night: string[], mood?: string, journal?: string, restDay?: boolean }
             history: {},
             routineFilterDay: 'all',
             calendarYear: new Date().getFullYear(),
@@ -500,18 +560,24 @@
             selectedCalendarDate: null
         };
 
+        let lastRenderedDateKey = getDateKey(new Date());
+
         let formState = {
             period: 'morning',
-            days: [0, 1, 2, 3, 4, 5, 6]
+            days: [0, 1, 2, 3, 4, 5, 6],
+            core: false
         };
 
+        // タイムスタンプ基準の堅牢なタイマー状態（バックグラウンド・ロック遅延を防止）
         let focusState = {
             active: false,
             queue: [],
             currentIndex: 0,
-            remainingSec: 0,
             totalSec: 0,
+            pausedRemainingSec: 0,
+            endTimestamp: null,
             isRunning: false,
+            overtimeAlerted: false,
             intervalId: null
         };
 
@@ -532,6 +598,13 @@
             const d = date.getDate();
             const w = DAY_LABELS[date.getDay()];
             return `${m}月${d}日 (${w})`;
+        }
+
+        function formatEtaTime(minutesFromNow) {
+            const eta = new Date(Date.now() + Math.max(0, minutesFromNow) * 60000);
+            const hh = String(eta.getHours()).padStart(2, '0');
+            const mm = String(eta.getMinutes()).padStart(2, '0');
+            return `${hh}:${mm}`;
         }
 
         function formatDaysSummary(days) {
@@ -560,12 +633,49 @@
         }
 
         function ensureDayRecord(dateKey) {
-            if (!state.history[dateKey]) {
+            if (!state.history[dateKey] || typeof state.history[dateKey] !== 'object') {
                 state.history[dateKey] = { morning: [], night: [] };
             }
             if (!Array.isArray(state.history[dateKey].morning)) state.history[dateKey].morning = [];
             if (!Array.isArray(state.history[dateKey].night)) state.history[dateKey].night = [];
             return state.history[dateKey];
+        }
+
+        function sanitizeRoutine(raw, index = 0) {
+            if (!raw || typeof raw !== 'object') return null;
+            const title = String(raw.title || '').trim().slice(0, 40);
+            if (!title) return null;
+            const period = raw.period === 'night' ? 'night' : 'morning';
+            const duration = Math.max(1, Math.min(180, parseInt(raw.duration, 10) || 5));
+            const days = Array.isArray(raw.days)
+                ? [...new Set(raw.days.map(Number).filter(d => Number.isInteger(d) && d >= 0 && d <= 6))]
+                : [0, 1, 2, 3, 4, 5, 6];
+            return {
+                id: String(raw.id || ('r_' + Date.now() + '_' + index)),
+                title,
+                period,
+                duration,
+                days: days.length > 0 ? days : [0, 1, 2, 3, 4, 5, 6],
+                note: String(raw.note || '').trim().slice(0, 60),
+                core: Boolean(raw.core),
+                order: typeof raw.order === 'number' ? raw.order : index
+            };
+        }
+
+        function sanitizeHistory(rawHistory) {
+            const clean = {};
+            if (!rawHistory || typeof rawHistory !== 'object') return clean;
+            Object.entries(rawHistory).forEach(([key, val]) => {
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !val || typeof val !== 'object') return;
+                clean[key] = {
+                    morning: Array.isArray(val.morning) ? val.morning.map(String) : [],
+                    night: Array.isArray(val.night) ? val.night.map(String) : [],
+                    mood: typeof val.mood === 'string' ? val.mood : null,
+                    journal: typeof val.journal === 'string' ? val.journal.slice(0, 80) : '',
+                    restDay: Boolean(val.restDay)
+                };
+            });
+            return clean;
         }
 
         /* ==========================================================================
@@ -623,20 +733,19 @@
            ========================================================================== */
         function createDefaultData() {
             const routines = [
-                { id: 'm1', title: 'カーテンを開けて朝日を浴びる', period: 'morning', duration: 2, days: [0,1,2,3,4,5,6], note: '体内時計をリセット', order: 0 },
-                { id: 'm2', title: '白湯を一杯ゆっくり飲む', period: 'morning', duration: 5, days: [0,1,2,3,4,5,6], note: '身体を内側から温める', order: 1 },
-                { id: 'm3', title: '軽いストレッチ・深呼吸', period: 'morning', duration: 10, days: [0,1,2,3,4,5,6], note: '肩と背中をほぐす', order: 2 },
-                { id: 'm4', title: '今日の予定と優先タスクを確認', period: 'morning', duration: 5, days: [1,2,3,4,5], note: '平日の大切な3つを決める', order: 3 },
-                { id: 'm5', title: 'ゆっくりコーヒー・お茶を淹れる', period: 'morning', duration: 15, days: [0,6], note: '休日のご褒美時間', order: 4 },
+                { id: 'm1', title: 'カーテンを開けて朝日を浴びる', period: 'morning', duration: 2, days: [0,1,2,3,4,5,6], note: '体内時計をリセット', core: true, order: 0 },
+                { id: 'm2', title: '白湯を一杯ゆっくり飲む', period: 'morning', duration: 5, days: [0,1,2,3,4,5,6], note: '身体を内側から温める', core: true, order: 1 },
+                { id: 'm3', title: '軽いストレッチ・深呼吸', period: 'morning', duration: 10, days: [0,1,2,3,4,5,6], note: '肩と背中をほぐす', core: false, order: 2 },
+                { id: 'm4', title: '今日の予定と優先タスクを確認', period: 'morning', duration: 5, days: [1,2,3,4,5], note: '平日の大切な3つを決める', core: true, order: 3 },
+                { id: 'm5', title: 'ゆっくりコーヒー・お茶を淹れる', period: 'morning', duration: 15, days: [0,6], note: '休日のご褒美時間', core: false, order: 4 },
 
-                { id: 'n1', title: 'スマホを充電スポットに置く', period: 'night', duration: 2, days: [0,1,2,3,4,5,6], note: 'デジタルデトックスの合図', order: 0 },
-                { id: 'n2', title: '明日の準備と机のリセット', period: 'night', duration: 5, days: [0,1,2,3,4], note: '翌朝の自分に余白を残す', order: 1 },
-                { id: 'n3', title: '温かい飲み物とスキンケア', period: 'night', duration: 10, days: [0,1,2,3,4,5,6], note: '一日の疲れを労わる', order: 2 },
-                { id: 'n4', title: '読書または3行日記', period: 'night', duration: 15, days: [0,1,2,3,4,5,6], note: '今日よかったことを思い出す', order: 3 },
-                { id: 'n5', title: '湯船に浸かってリラックス', period: 'night', duration: 20, days: [5,6], note: '週末の丁寧なケア', order: 4 }
+                { id: 'n1', title: 'スマホを充電スポットに置く', period: 'night', duration: 2, days: [0,1,2,3,4,5,6], note: 'デジタルデトックスの合図', core: true, order: 0 },
+                { id: 'n2', title: '明日の準備と机のリセット', period: 'night', duration: 5, days: [0,1,2,3,4], note: '翌朝の自分に余白を残す', core: true, order: 1 },
+                { id: 'n3', title: '温かい飲み物とスキンケア', period: 'night', duration: 10, days: [0,1,2,3,4,5,6], note: '一日の疲れを労わる', core: false, order: 2 },
+                { id: 'n4', title: '読書または3行日記', period: 'night', duration: 15, days: [0,1,2,3,4,5,6], note: '今日よかったことを思い出す', core: false, order: 3 },
+                { id: 'n5', title: '湯船に浸かってリラックス', period: 'night', duration: 20, days: [5,6], note: '週末の丁寧なケア', core: false, order: 4 }
             ];
 
-            // 過去4日分の豊かなサンプル記録（振り返り＆カレンダーをすぐ体験できるように）
             const history = {};
             const today = new Date();
             const sampleJournals = [
@@ -671,9 +780,12 @@
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    state.routines = Array.isArray(parsed.routines) ? parsed.routines : [];
-                    state.history = parsed.history || {};
-                    state.soundEnabled = parsed.soundEnabled !== undefined ? parsed.soundEnabled : true;
+                    state.routines = Array.isArray(parsed.routines)
+                        ? parsed.routines.map((r, i) => sanitizeRoutine(r, i)).filter(Boolean)
+                        : [];
+                    state.history = sanitizeHistory(parsed.history);
+                    state.soundEnabled = parsed.soundEnabled !== undefined ? Boolean(parsed.soundEnabled) : true;
+                    state.quickMode = Boolean(parsed.quickMode);
                 } else {
                     const defaults = createDefaultData();
                     state.routines = defaults.routines;
@@ -696,7 +808,8 @@
                 localStorage.setItem(STORAGE_KEY, JSON.stringify({
                     routines: state.routines,
                     history: state.history,
-                    soundEnabled: state.soundEnabled
+                    soundEnabled: state.soundEnabled,
+                    quickMode: state.quickMode
                 }));
             } catch (e) {
                 showToast('データの保存に失敗しました');
@@ -706,10 +819,10 @@
         /* ==========================================================================
            ロジックヘルパー（達成計算・優しいストリーク・マイルストーン）
            ========================================================================== */
-        function getTasksForDate(period, date = new Date()) {
+        function getTasksForDate(period, date = new Date(), onlyCore = false) {
             const dow = date.getDay();
             return state.routines
-                .filter(r => r.period === period && r.days.includes(dow))
+                .filter(r => r.period === period && r.days.includes(dow) && (!onlyCore || r.core))
                 .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         }
 
@@ -724,28 +837,26 @@
         }
 
         function getCompletionRateForDate(period, date) {
-            const tasks = getTasksForDate(period, date);
+            const tasks = getTasksForDate(period, date, false);
             if (tasks.length === 0) return null;
             const completed = getCompletedIds(period, getDateKey(date));
             const doneCount = tasks.filter(t => completed.includes(t.id)).length;
             return doneCount / tasks.length;
         }
 
-        function isPeriodFullyCompleted(period, date = new Date()) {
-            const tasks = getTasksForDate(period, date);
+        function isPeriodFullyCompleted(period, date = new Date(), onlyCore = false) {
+            const tasks = getTasksForDate(period, date, onlyCore);
             if (tasks.length === 0) return false;
             const completed = getCompletedIds(period, getDateKey(date));
             return tasks.every(t => completed.includes(t.id));
         }
 
-        // 「長続きする工夫」: 1つ以上達成（スモールステップ）または「お休み日」で継続の灯火が途切れない優しいストリーク
         function calculateGentleStreak(period) {
             let streak = 0;
             const today = new Date();
             let checkDate = new Date(today);
             const todayKey = getDateKey(checkDate);
 
-            // 今日がまだ未着手かつお休み日でもないなら昨日から数える
             const todayDoneCount = getCompletedIds(period, todayKey).length;
             if (todayDoneCount === 0 && !isRestDay(todayKey)) {
                 checkDate.setDate(checkDate.getDate() - 1);
@@ -754,11 +865,10 @@
             for (let i = 0; i < 365; i++) {
                 const key = getDateKey(checkDate);
                 if (isRestDay(key)) {
-                    // お休み日はカウントを増やさず、連続を途切れさせない
                     checkDate.setDate(checkDate.getDate() - 1);
                     continue;
                 }
-                const tasks = getTasksForDate(period, checkDate);
+                const tasks = getTasksForDate(period, checkDate, false);
                 if (tasks.length === 0) {
                     checkDate.setDate(checkDate.getDate() - 1);
                     continue;
@@ -783,7 +893,6 @@
 
             const routineMap = new Map(state.routines.map(r => [r.id, r]));
 
-            // 曜日別の達成率集計（過去30日）
             const dowTotals = Array(7).fill(0);
             const dowCompleted = Array(7).fill(0);
 
@@ -795,14 +904,13 @@
                 if (isRestDay(key)) continue;
 
                 ['morning', 'night'].forEach(p => {
-                    const tasks = getTasksForDate(p, d);
+                    const tasks = getTasksForDate(p, d, false);
                     const done = getCompletedIds(p, key).filter(id => tasks.some(t => t.id === id)).length;
                     dowTotals[dow] += tasks.length;
                     dowCompleted[dow] += done;
                 });
             }
 
-            // 過去14日間のリズムデータ
             const recent14 = [];
             for (let offset = 13; offset >= 0; offset--) {
                 const d = new Date(today);
@@ -818,7 +926,6 @@
                 });
             }
 
-            // 全履歴の集計
             const journalEntries = [];
             Object.entries(state.history).forEach(([key, val]) => {
                 const mList = Array.isArray(val.morning) ? val.morning : [];
@@ -835,7 +942,7 @@
                 const [y, m, day] = key.split('-').map(Number);
                 if (y && m && day) {
                     const dObj = new Date(y, m - 1, day);
-                    if (isPeriodFullyCompleted('morning', dObj) && isPeriodFullyCompleted('night', dObj)) {
+                    if (isPeriodFullyCompleted('morning', dObj, false) && isPeriodFullyCompleted('night', dObj, false)) {
                         perfectDaysCount++;
                     }
                     if (val.mood || (val.journal && val.journal.trim())) {
@@ -855,7 +962,6 @@
             const nightStreak = calculateGentleStreak('night');
             const maxStreak = Math.max(morningStreak, nightStreak);
 
-            // 光のしるし（マイルストーン）
             const milestones = [
                 {
                     id: 'first_step',
@@ -916,7 +1022,7 @@
             return {
                 isMorning,
                 bodyBg: isMorning ? 'bg-morning-bg text-morning-text' : 'bg-night-bg text-night-text',
-                headerBg: isMorning ? 'bg-morning-bg/70 backdrop-blur-xl' : 'bg-night-bg/70 backdrop-blur-xl',
+                headerBg: isMorning ? 'bg-morning-bg/75 backdrop-blur-xl' : 'bg-night-bg/75 backdrop-blur-xl',
                 card: isMorning ? 'glass-morning' : 'glass-night',
                 subtleBg: isMorning ? 'bg-morning-subtle' : 'bg-night-subtle',
                 border: isMorning ? 'border-stone-300/60' : 'border-slate-700/60',
@@ -929,17 +1035,33 @@
                 accentSoft: isMorning ? 'bg-morning-accentSoft text-morning-accent' : 'bg-night-accentSoft text-night-accent',
                 accentStroke: isMorning ? '#C8793B' : '#94A6FF',
                 input: isMorning
-                    ? 'bg-white/80 border-stone-200/90 text-stone-800 focus:ring-amber-500/25 focus:border-amber-600'
-                    : 'bg-slate-900/70 border-slate-700/80 text-slate-100 focus:ring-indigo-400/25 focus:border-indigo-400',
+                    ? 'bg-white/85 border-stone-200/90 text-stone-800 focus:ring-amber-500/25 focus:border-amber-600'
+                    : 'bg-slate-900/75 border-slate-700/80 text-slate-100 focus:ring-indigo-400/25 focus:border-indigo-400',
                 navBg: isMorning ? 'glass-morning' : 'glass-night'
             };
         }
 
+        function renderPeriodStatusBadge(period) {
+            const today = new Date();
+            const rate = getCompletionRateForDate(period, today);
+            if (rate === null) return '';
+            if (rate === 1) {
+                return `<svg class="w-3 h-3 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+            }
+            if (rate > 0) {
+                const dotColor = period === 'morning' ? 'bg-amber-500' : 'bg-indigo-400';
+                return `<span class="w-1.5 h-1.5 rounded-full ${dotColor}"></span>`;
+            }
+            return `<span class="w-1.5 h-1.5 rounded-full bg-current opacity-25"></span>`;
+        }
+
         function applyTheme() {
             const t = getThemeClasses();
+            const now = new Date();
+            lastRenderedDateKey = getDateKey(now);
             document.body.className = `min-h-screen antialiased relative ${t.bodyBg}`;
 
-            // 背景アンビエントオーブの色を朝・夜で滑らかに変化
+            // 背景アンビエントオーブ
             const orbTop = document.getElementById('orb-top');
             const orbBottom = document.getElementById('orb-bottom');
             if (t.isMorning) {
@@ -954,15 +1076,13 @@
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 px-5 safe-top pb-3 transition-colors duration-500 ${t.headerBg}`;
             document.getElementById('header-greeting').textContent = t.isMorning ? 'Good Morning' : 'Good Evening';
-            document.getElementById('header-date').textContent = formatDisplayDate(new Date());
+            document.getElementById('header-date').textContent = formatDisplayDate(now);
 
-            // ステータスバーのテーマカラーを朝・夜に同期
             const themeColorMeta = document.getElementById('meta-theme-color');
             if (themeColorMeta) {
                 themeColorMeta.setAttribute('content', t.isMorning ? '#F6F2EB' : '#090D18');
             }
 
-            // ホーム画面追加ボタンのスタイル（スタンドアロン起動中なら非表示）
             const installBtn = document.getElementById('install-app-btn');
             if (installBtn) {
                 if (isStandaloneMode()) {
@@ -972,19 +1092,21 @@
                 }
             }
 
-            // 朝・夜スイッチャー
+            // 朝・夜スイッチャー＋達成インジケーター
             const switcher = document.getElementById('period-switcher');
             switcher.className = `flex p-1 rounded-full border transition-all duration-300 ${t.subtleBg} ${t.border}`;
 
             const btnMorning = document.getElementById('btn-period-morning');
             const btnNight = document.getElementById('btn-period-night');
             if (t.isMorning) {
-                btnMorning.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-white text-morning-accent shadow-sm transition-all duration-300';
-                btnNight.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-morning-muted hover:text-morning-text transition-all duration-300';
+                btnMorning.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white text-morning-accent shadow-sm transition-all duration-300';
+                btnNight.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-morning-muted hover:text-morning-text transition-all duration-300';
             } else {
-                btnMorning.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-night-muted hover:text-night-text transition-all duration-300';
-                btnNight.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-slate-700/80 text-indigo-200 shadow-sm transition-all duration-300';
+                btnMorning.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-night-muted hover:text-night-text transition-all duration-300';
+                btnNight.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-700/80 text-indigo-200 shadow-sm transition-all duration-300';
             }
+            document.getElementById('indicator-morning').innerHTML = renderPeriodStatusBadge('morning');
+            document.getElementById('indicator-night').innerHTML = renderPeriodStatusBadge('night');
 
             // サウンドボタン
             const soundBtn = document.getElementById('sound-toggle-btn');
@@ -1011,7 +1133,6 @@
            クリエイティブSVGアートワーク：進捗で昇る太陽 / 満ちる月
            ========================================================================== */
         function renderCelestialArtwork(progress, isMorning) {
-            // 太陽は progress 0→1 で y=74 から y=34 へ上昇し、光輪が広がる
             if (isMorning) {
                 const sunY = 72 - progress * 36;
                 const haloR = 20 + progress * 18;
@@ -1027,24 +1148,19 @@
                                 <rect x="0" y="0" width="100" height="74" rx="16"/>
                             </clipPath>
                         </defs>
-                        <!-- 外枠の繊細な円弧 -->
                         <circle cx="50" cy="50" r="46" fill="none" stroke="#C8793B" stroke-opacity="0.18" stroke-width="1" stroke-dasharray="2 4"/>
-                        <!-- 進捗リング -->
                         <circle cx="50" cy="50" r="42" fill="none" stroke="#C8793B" stroke-opacity="0.12" stroke-width="2.5"/>
                         <circle cx="50" cy="50" r="42" fill="none" stroke="#C8793B" stroke-width="2.5" stroke-linecap="round"
                             class="progress-ring-circle" stroke-dasharray="263.89" stroke-dashoffset="${263.89 * (1 - progress)}"/>
-                        <!-- 地平線より上に昇る太陽 -->
                         <g clip-path="url(#horizonClip)">
                             <circle cx="50" cy="${sunY}" r="${haloR}" fill="url(#sunGlow)" opacity="${haloOpacity}" class="celestial-transition"/>
                             <circle cx="50" cy="${sunY}" r="14" fill="#D58640" class="celestial-transition"/>
                         </g>
-                        <!-- 地平線 -->
                         <line x1="20" y1="74" x2="80" y2="74" stroke="#B68E68" stroke-width="1.2" stroke-opacity="0.5" stroke-linecap="round"/>
                         <text x="50" y="88" text-anchor="middle" font-size="10" fill="#787067" class="font-serif">${Math.round(progress * 100)}%</text>
                     </svg>
                 `;
             } else {
-                // 夜は progress 0→1 で三日月が満月へと満ちていく
                 const shadowOffset = 10 + progress * 24;
                 const glowOpacity = 0.15 + progress * 0.35;
                 return `
@@ -1064,11 +1180,9 @@
                         <circle cx="50" cy="50" r="42" fill="none" stroke="#90A2FF" stroke-opacity="0.14" stroke-width="2.5"/>
                         <circle cx="50" cy="50" r="42" fill="none" stroke="#90A2FF" stroke-width="2.5" stroke-linecap="round"
                             class="progress-ring-circle" stroke-dasharray="263.89" stroke-dashoffset="${263.89 * (1 - progress)}"/>
-                        <!-- 星々 -->
                         <circle cx="28" cy="34" r="1.2" fill="#DFC58E" class="star-twinkle"/>
                         <circle cx="72" cy="30" r="1.4" fill="#C7D2FE" class="star-twinkle" style="animation-delay: 1.1s"/>
                         <circle cx="68" cy="62" r="1" fill="#DFC58E" class="star-twinkle" style="animation-delay: 2.1s"/>
-                        <!-- 月光と満ち欠け -->
                         <circle cx="50" cy="46" r="28" fill="url(#moonGlow)" opacity="${glowOpacity}" class="celestial-transition"/>
                         <circle cx="50" cy="46" r="16" fill="#E8D3A2" mask="url(#moonPhaseMask)"/>
                         <text x="50" y="84" text-anchor="middle" font-size="10" fill="#8E9BB5" class="font-serif">${Math.round(progress * 100)}%</text>
@@ -1085,6 +1199,7 @@
             const main = document.getElementById('main-content');
             if (state.tab === 'today') {
                 main.innerHTML = renderTodayView();
+                syncInputClearBtn('today-journal-input');
             } else if (state.tab === 'routines') {
                 main.innerHTML = renderRoutinesView();
             } else if (state.tab === 'insights') {
@@ -1097,7 +1212,11 @@
             const t = getThemeClasses();
             const today = new Date();
             const todayKey = getDateKey(today);
-            const tasks = getTasksForDate(state.period, today);
+            const allTodayTasks = getTasksForDate(state.period, today, false);
+            const hasCoreTasks = allTodayTasks.some(task => task.core);
+            const activeQuickMode = state.quickMode && hasCoreTasks;
+
+            const tasks = activeQuickMode ? allTodayTasks.filter(task => task.core) : allTodayTasks;
             const completedIds = getCompletedIds(state.period, todayKey);
             const completedCount = tasks.filter(task => completedIds.includes(task.id)).length;
             const totalCount = tasks.length;
@@ -1106,6 +1225,7 @@
             const remainingDuration = tasks
                 .filter(task => !completedIds.includes(task.id))
                 .reduce((sum, task) => sum + (Number(task.duration) || 0), 0);
+            const etaStr = formatEtaTime(remainingDuration);
 
             const streak = calculateGentleStreak(state.period);
             const quotes = t.isMorning ? MORNING_QUOTES : NIGHT_QUOTES;
@@ -1122,7 +1242,7 @@
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-2 flex-wrap">
                                     <span class="text-[11px] font-medium px-2.5 py-1 rounded-full tracking-wide ${t.accentSoft}">
-                                        ${t.isMorning ? '朝の整え' : '夜のほどき'}
+                                        ${t.isMorning ? '朝の整え' : '夜のほどき'}${activeQuickMode ? ' · 時短' : ''}
                                     </span>
                                     ${streak > 0 ? `
                                         <span class="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full ${t.subtleBg}">
@@ -1148,12 +1268,15 @@
                             ${renderCelestialArtwork(progress, t.isMorning)}
                         </div>
 
-                        <!-- アクションバー -->
+                        <!-- アクションバー（残り時間＋完了予定時刻＋ガイド開始） -->
                         ${totalCount > 0 ? `
-                            <div class="mt-4 pt-4 border-t ${t.border} flex items-center justify-between gap-3">
-                                <div class="flex items-center gap-1.5 text-xs ${t.muted}">
-                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                    <span>${isAllDone ? `合計 ${formatMinutes(totalDuration)} 完了` : `残り目安 ${formatMinutes(remainingDuration)}`}</span>
+                            <div class="mt-4 pt-4 border-t ${t.border} flex items-center justify-between gap-2 flex-wrap">
+                                <div class="flex items-center gap-2 text-xs ${t.muted}">
+                                    <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    ${isAllDone
+                                        ? `<span>合計 ${formatMinutes(totalDuration)} 完了</span>`
+                                        : `<span>残り ${formatMinutes(remainingDuration)} <span class="opacity-55 mx-0.5">/</span> <strong class="font-medium opacity-95">${etaStr} 完了予定</strong></span>`
+                                    }
                                 </div>
                                 ${!isAllDone ? `
                                     <button onclick="startFocusMode()" class="px-4 py-2 rounded-full text-xs font-medium text-white shadow-sm transition-all active:scale-[0.97] flex items-center gap-1.5 ${t.accentBg}">
@@ -1172,18 +1295,32 @@
 
                     <!-- チェックリストセクション -->
                     <section class="space-y-2.5">
-                        <div class="flex items-center justify-between px-1">
+                        <div class="flex items-center justify-between px-1 gap-2">
                             <div class="flex items-center gap-2">
                                 <h3 class="text-xs font-medium tracking-wider ${t.muted}">
                                     ${DAY_LABELS[today.getDay()]}曜日のリスト
                                 </h3>
                                 <span class="font-serif text-xs ${t.muted}">${completedCount} / ${totalCount}</span>
                             </div>
-                            <button onclick="openTaskModal(null)" class="text-xs font-medium ${t.accentText} hover:opacity-80 flex items-center gap-1 transition-opacity">
-                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                <span>追加</span>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                ${hasCoreTasks ? `
+                                    <button onclick="toggleQuickMode()" title="忙しい日はコア習慣だけに絞り込みます" class="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all flex items-center gap-1 ${activeQuickMode ? `${t.accentSoft} border-current` : `${t.border} ${t.muted} hover:opacity-100`}">
+                                        <span>★ 時短${activeQuickMode ? 'ON' : ''}</span>
+                                    </button>
+                                ` : ''}
+                                <button onclick="openTaskModal(null)" class="text-xs font-medium ${t.accentText} hover:opacity-80 flex items-center gap-1 transition-opacity py-1">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    <span>追加</span>
+                                </button>
+                            </div>
                         </div>
+
+                        ${isAllDone ? `
+                            <div class="rounded-2xl px-4 py-3 ${t.accentSoft} flex items-center justify-between gap-2 text-xs">
+                                <span class="font-medium">${activeQuickMode ? 'コア習慣をすべて達成しました！' : '今日のルーティーンをすべて完了しました！'}</span>
+                                <span class="font-serif opacity-80">+${formatMinutes(totalDuration)}</span>
+                            </div>
+                        ` : ''}
 
                         ${totalCount === 0 ? `
                             <div class="rounded-3xl p-8 text-center ${t.card} space-y-3">
@@ -1205,7 +1342,10 @@
 
                                             <!-- テキスト情報 -->
                                             <div onclick="toggleTaskCompletion('${task.id}')" class="flex-1 min-w-0 cursor-pointer select-none">
-                                                <div class="text-sm font-medium truncate transition-all ${done ? 'line-through opacity-70' : ''}">${escapeHtml(task.title)}</div>
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-sm font-medium truncate transition-all ${done ? 'line-through opacity-70' : ''}">${escapeHtml(task.title)}</span>
+                                                    ${task.core ? `<span class="text-[10px] px-1.5 py-0.2 rounded-md flex-shrink-0 ${t.accentSoft}" title="コア習慣">★</span>` : ''}
+                                                </div>
                                                 <div class="flex items-center gap-2 mt-1 text-[11px] ${t.muted}">
                                                     <span class="inline-flex items-center gap-1 font-serif text-xs">
                                                         ${task.duration} min
@@ -1216,7 +1356,7 @@
 
                                             <!-- 個別タイマー開始 -->
                                             ${!done ? `
-                                                <button onclick="startFocusMode('${task.id}')" title="この項目からタイマーを開始" class="p-2 rounded-full ${t.subtleBg} ${t.muted} hover:opacity-100 transition-all flex-shrink-0" aria-label="タイマー開始">
+                                                <button onclick="startFocusMode('${task.id}')" title="この項目からタイマーを開始" class="p-2.5 rounded-full ${t.subtleBg} ${t.muted} hover:opacity-100 transition-all flex-shrink-0" aria-label="タイマー開始">
                                                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                                 </button>
                                             ` : ''}
@@ -1227,7 +1367,7 @@
                         `}
                     </section>
 
-                    <!-- 今日の気分＆ちいさな振り返り（習慣に愛着を生む仕組み） -->
+                    <!-- 今日の気分＆ちいさな振り返り -->
                     <section class="rounded-[24px] p-5 ${t.card} space-y-3.5">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-medium tracking-wide ${t.muted}">今日の気分とひとこと</span>
@@ -1251,10 +1391,15 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <div class="relative flex-1 flex items-center">
-                                <input type="text" id="today-journal-input" value="${escapeHtml(todayRec.journal || '')}" maxlength="80" placeholder="今日の小さな気づきを残す…" class="w-full pl-3.5 pr-10 py-2.5 rounded-xl border text-xs focus:outline-none focus:ring-2 transition-all ${t.input}">
-                                <button type="button" id="voice-btn-today-journal" onclick="toggleVoiceInput('today-journal-input', { autoSaveJournalDate: '${todayKey}' })" title="音声で入力" aria-label="今日のひとことを音声で入力" class="absolute right-1.5 p-1.5 rounded-lg transition-all ${t.muted} hover:opacity-100">
-                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-                                </button>
+                                <input type="text" id="today-journal-input" oninput="syncInputClearBtn('today-journal-input')" value="${escapeHtml(todayRec.journal || '')}" maxlength="80" placeholder="今日の小さな気づきを残す…" class="w-full pl-3.5 pr-16 py-2.5 rounded-xl border text-xs focus:outline-none focus:ring-2 transition-all ${t.input}">
+                                <div class="absolute right-1.5 flex items-center gap-0.5">
+                                    <button type="button" id="clear-btn-today-journal-input" onclick="clearTextInput('today-journal-input')" title="入力をクリア" aria-label="入力をクリア" class="hidden p-1 rounded-md opacity-45 hover:opacity-90 transition-opacity">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    </button>
+                                    <button type="button" id="voice-btn-today-journal" onclick="toggleVoiceInput('today-journal-input', { autoSaveJournalDate: '${todayKey}' })" title="音声で入力" aria-label="今日のひとことを音声で入力" class="p-1.5 rounded-lg transition-all ${t.muted} hover:opacity-100">
+                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                                    </button>
+                                </div>
                             </div>
                             <button onclick="saveDayJournal('${todayKey}', 'today-journal-input')" class="px-3.5 py-2.5 rounded-xl text-xs font-medium ${t.subtleBg} hover:opacity-100 transition-opacity flex-shrink-0">保存</button>
                         </div>
@@ -1321,21 +1466,24 @@
                             ${filtered.map((task, idx) => `
                                 <div class="rounded-2xl p-4 flex items-center gap-3 ${t.card}">
                                     ${state.routineFilterDay === 'all' ? `
-                                        <div class="flex flex-col gap-0.5 flex-shrink-0">
-                                            <button onclick="moveRoutine('${task.id}', -1)" ${idx === 0 ? 'disabled' : ''} class="p-1 rounded-md ${idx === 0 ? 'opacity-20 cursor-not-allowed' : `${t.muted} hover:opacity-100`}" aria-label="上へ移動">
+                                        <div class="flex flex-col gap-1 flex-shrink-0">
+                                            <button onclick="moveRoutine('${task.id}', -1)" ${idx === 0 ? 'disabled' : ''} class="p-1.5 rounded-lg ${idx === 0 ? 'opacity-20 cursor-not-allowed' : `${t.subtleBg} ${t.muted} hover:opacity-100`}" aria-label="上へ移動">
                                                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
                                             </button>
-                                            <button onclick="moveRoutine('${task.id}', 1)" ${idx === filtered.length - 1 ? 'disabled' : ''} class="p-1 rounded-md ${idx === filtered.length - 1 ? 'opacity-20 cursor-not-allowed' : `${t.muted} hover:opacity-100`}" aria-label="下へ移動">
+                                            <button onclick="moveRoutine('${task.id}', 1)" ${idx === filtered.length - 1 ? 'disabled' : ''} class="p-1.5 rounded-lg ${idx === filtered.length - 1 ? 'opacity-20 cursor-not-allowed' : `${t.subtleBg} ${t.muted} hover:opacity-100`}" aria-label="下へ移動">
                                                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                                             </button>
                                         </div>
                                     ` : ''}
 
                                     <div onclick="openTaskModal('${task.id}')" class="flex-1 min-w-0 cursor-pointer">
-                                        <div class="text-sm font-medium truncate">${escapeHtml(task.title)}</div>
-                                        <div class="flex items-center flex-wrap gap-2 mt-1.5">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-sm font-medium truncate">${escapeHtml(task.title)}</span>
+                                        </div>
+                                        <div class="flex items-center flex-wrap gap-1.5 mt-1.5">
                                             <span class="text-[11px] px-2.5 py-0.5 rounded-full font-medium ${t.accentSoft}">${task.duration}分</span>
                                             <span class="text-[11px] px-2.5 py-0.5 rounded-full ${t.subtleBg} ${t.muted}">${formatDaysSummary(task.days)}</span>
+                                            ${task.core ? `<span class="text-[10px] px-2 py-0.5 rounded-full font-medium border border-current/25 ${t.accentText}">★ コア</span>` : ''}
                                         </div>
                                     </div>
 
@@ -1354,7 +1502,7 @@
 
                     ${periodRoutines.length > 0 ? `
                         <div class="pt-2 flex justify-center">
-                            <button onclick="confirmClearPeriodRoutines()" class="text-xs text-rose-500/80 hover:text-rose-500 underline underline-offset-4 transition-colors">
+                            <button onclick="confirmClearPeriodRoutines()" class="text-xs text-rose-500/80 hover:text-rose-500 underline underline-offset-4 transition-colors py-2">
                                 ${t.isMorning ? '朝' : '夜'}のルーティーン項目をすべて削除
                             </button>
                         </div>
@@ -1363,7 +1511,7 @@
             `;
         }
 
-        // 3. 「記録」タブ（クリエイティブデザイン＆長続きする工夫を凝縮）
+        // 3. 「記録」タブ
         function renderInsightsView() {
             const t = getThemeClasses();
             const stats = calculateInsightsStats();
@@ -1376,7 +1524,6 @@
             const daysInMonth = lastDayOfMonth.getDate();
             const todayKey = getDateKey(new Date());
 
-            // 天体カレンダーセル生成
             let calendarCells = '';
             for (let i = 0; i < startPad; i++) {
                 calendarCells += `<div class="h-12"></div>`;
@@ -1391,7 +1538,6 @@
                 const isSelected = key === state.selectedCalendarDate;
                 const isPerfect = mRate === 1 && nRate === 1;
 
-                // 朝（琥珀色）と夜（月光色）の半円アーク表現
                 const mOpacity = mRate === 1 ? 1 : (mRate > 0 ? 0.45 : 0);
                 const nOpacity = nRate === 1 ? 1 : (nRate > 0 ? 0.45 : 0);
 
@@ -1413,14 +1559,13 @@
                 `;
             }
 
-            // 選択日の詳細ジャーナル＆お休みパス切替
             let selectedDetailHtml = '';
             if (state.selectedCalendarDate) {
                 const key = state.selectedCalendarDate;
                 const [sy, sm, sd] = key.split('-').map(Number);
                 const sDate = new Date(sy, sm - 1, sd);
-                const mTasks = getTasksForDate('morning', sDate);
-                const nTasks = getTasksForDate('night', sDate);
+                const mTasks = getTasksForDate('morning', sDate, false);
+                const nTasks = getTasksForDate('night', sDate, false);
                 const mDone = getCompletedIds('morning', key).filter(id => mTasks.some(tk => tk.id === id)).length;
                 const nDone = getCompletedIds('night', key).filter(id => nTasks.some(tk => tk.id === id)).length;
                 const rec = state.history[key] || {};
@@ -1448,7 +1593,6 @@
                             <p class="text-xs leading-relaxed px-3.5 py-2.5 rounded-xl ${t.subtleBg} opacity-90">「${escapeHtml(rec.journal)}」</p>
                         ` : ''}
 
-                        <!-- 長続きの工夫：お休みパス（連続記録を守る） -->
                         <div class="flex items-center justify-between gap-2 pt-1">
                             <span class="text-[11px] ${t.muted}">疲れた日は「お休み日」にすると連続記録が守られます</span>
                             <button onclick="toggleRestDay('${key}')" class="px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all flex-shrink-0 ${rest ? `${t.accentSoft} border-current` : `${t.border} ${t.muted} hover:opacity-100`}">
@@ -1486,7 +1630,6 @@
                             </div>
                         </div>
 
-                        <!-- 優しい継続リズム（朝・夜） -->
                         <div class="grid grid-cols-2 gap-3 mt-5 pt-4 border-t ${t.border}">
                             <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl ${t.subtleBg}">
                                 <div>
@@ -1569,7 +1712,7 @@
                                     <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#8E9FFF]"></span>夜</span>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-14 gap-1 items-end h-20" style="grid-template-columns: repeat(14, minmax(0, 1fr));">
+                            <div class="grid gap-1 items-end h-20" style="grid-template-columns: repeat(14, minmax(0, 1fr));">
                                 ${stats.recent14.map(d => `
                                     <div class="flex flex-col items-center gap-1 h-full justify-end">
                                         <div class="w-full flex flex-col gap-0.5 justify-end h-14">
@@ -1630,10 +1773,15 @@
                         </section>
                     ` : ''}
 
-                    <!-- データ管理（テストデータの完全消去 / サンプル復元） -->
-                    <section class="rounded-[24px] p-4 ${t.card} flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                        <span class="${t.muted}">データ管理</span>
-                        <div class="flex items-center gap-2 flex-wrap justify-center">
+                    <!-- データ管理（バックアップ・復元・テストデータの消去） -->
+                    <section class="rounded-[24px] p-5 ${t.card} space-y-3 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="font-medium ${t.muted}">データ管理・引き継ぎ</span>
+                            <button onclick="openBackupModal()" class="px-3.5 py-1.5 rounded-full ${t.subtleBg} font-medium hover:opacity-100 transition-opacity">
+                                バックアップ / 復元
+                            </button>
+                        </div>
+                        <div class="pt-3 border-t ${t.border} flex items-center justify-between gap-2 flex-wrap">
                             <button onclick="confirmClearAllData()" class="px-3.5 py-2 rounded-full border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 transition-colors font-medium">
                                 すべてのデータを消去
                             </button>
@@ -1667,6 +1815,13 @@
             applyTheme();
             showToast(state.soundEnabled ? '効果音をオンにしました' : '効果音をオフにしました');
             if (state.soundEnabled) playCheckSound();
+        }
+
+        function toggleQuickMode() {
+            state.quickMode = !state.quickMode;
+            saveState();
+            render();
+            showToast(state.quickMode ? '時短モード：コア習慣のみ表示します' : 'すべてのルーティーンを表示します');
         }
 
         function setRoutineFilter(val) {
@@ -1705,7 +1860,11 @@
             saveState();
             render();
 
-            if (idx < 0 && isPeriodFullyCompleted(state.period, today)) {
+            const allTodayTasks = getTasksForDate(state.period, today, false);
+            const hasCore = allTodayTasks.some(t => t.core);
+            const useQuick = state.quickMode && hasCore;
+
+            if (idx < 0 && isPeriodFullyCompleted(state.period, today, useQuick)) {
                 playCompleteAllSound();
                 launchConfetti();
                 showToast(state.period === 'morning' ? '朝のルーティーンを達成しました' : '夜のルーティーンを達成しました');
@@ -1800,6 +1959,34 @@
         }
 
         /* ==========================================================================
+           入力クリアボタン制御＆モーダル共通ヘルパー
+           ========================================================================== */
+        function syncInputClearBtn(inputId) {
+            const input = document.getElementById(inputId);
+            const btn = document.getElementById(`clear-btn-${inputId}`);
+            if (!input || !btn) return;
+            if (input.value && input.value.length > 0) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
+
+        function clearTextInput(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.value = '';
+            syncInputClearBtn(inputId);
+            input.focus();
+        }
+
+        function handleModalBackdropClick(event, closeFn) {
+            if (event.target === event.currentTarget) {
+                closeFn();
+            }
+        }
+
+        /* ==========================================================================
            タスク追加・編集モーダル
            ========================================================================== */
         function openTaskModal(taskId) {
@@ -1807,13 +1994,13 @@
             const t = getThemeClasses();
             const modal = document.getElementById('task-modal');
             const card = document.getElementById('task-modal-card');
-            card.className = `w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-fade-up max-h-[90vh] overflow-y-auto ${t.isMorning ? 'bg-[#FAF7F2] text-morning-text' : 'bg-[#131A2C] text-night-text border border-slate-700/80'}`;
+            card.className = `w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 safe-modal-bottom sm:pb-6 shadow-2xl animate-fade-up max-h-[90vh] overflow-y-auto ${t.isMorning ? 'bg-[#FAF7F2] text-morning-text' : 'bg-[#131A2C] text-night-text border border-slate-700/80'}`;
 
-            document.getElementById('task-title-input').className = `w-full pl-4 pr-12 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 transition-all ${t.input}`;
+            document.getElementById('task-title-input').className = `w-full pl-4 pr-20 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 transition-all ${t.input}`;
             document.getElementById('task-duration-input').className = `w-24 px-3.5 py-2.5 rounded-2xl border text-sm font-medium text-center focus:outline-none focus:ring-2 ${t.input}`;
-            document.getElementById('task-note-input').className = `w-full pl-4 pr-12 py-2.5 rounded-2xl border text-sm focus:outline-none focus:ring-2 transition-all ${t.input}`;
-            document.getElementById('voice-btn-task-title').className = `absolute right-2 p-2 rounded-xl transition-all ${t.muted} hover:opacity-100`;
-            document.getElementById('voice-btn-task-note').className = `absolute right-2 p-1.5 rounded-xl transition-all ${t.muted} hover:opacity-100`;
+            document.getElementById('task-note-input').className = `w-full pl-4 pr-20 py-2.5 rounded-2xl border text-sm focus:outline-none focus:ring-2 transition-all ${t.input}`;
+            document.getElementById('voice-btn-task-title').className = `p-2 rounded-xl transition-all ${t.muted} hover:opacity-100`;
+            document.getElementById('voice-btn-task-note').className = `p-1.5 rounded-xl transition-all ${t.muted} hover:opacity-100`;
             document.getElementById('save-task-btn').className = `flex-1 py-3 px-5 rounded-2xl text-sm font-medium text-white shadow-sm transition-all active:scale-[0.98] ${t.accentBg}`;
 
             document.getElementById('days-error').classList.add('hidden');
@@ -1829,6 +2016,7 @@
                 document.getElementById('delete-task-btn').classList.remove('hidden');
                 formState.period = task.period;
                 formState.days = [...task.days];
+                formState.core = Boolean(task.core);
             } else {
                 document.getElementById('modal-title').textContent = 'ルーティーンを追加';
                 document.getElementById('edit-task-id').value = '';
@@ -1840,9 +2028,13 @@
                 formState.days = state.routineFilterDay !== 'all'
                     ? [Number(state.routineFilterDay)]
                     : [0, 1, 2, 3, 4, 5, 6];
+                formState.core = false;
             }
 
+            syncInputClearBtn('task-title-input');
+            syncInputClearBtn('task-note-input');
             renderFormPeriodButtons();
+            renderFormCoreToggle();
             renderFormDayButtons();
 
             modal.classList.remove('hidden');
@@ -1860,6 +2052,26 @@
         function selectFormPeriod(p) {
             formState.period = p;
             renderFormPeriodButtons();
+        }
+
+        function toggleFormCore() {
+            formState.core = !formState.core;
+            renderFormCoreToggle();
+        }
+
+        function renderFormCoreToggle() {
+            const t = getThemeClasses();
+            const btn = document.getElementById('form-core-toggle');
+            const knob = document.getElementById('form-core-knob');
+            if (!btn || !knob) return;
+            btn.setAttribute('aria-checked', String(formState.core));
+            if (formState.core) {
+                btn.className = `w-12 h-7 rounded-full p-1 transition-colors duration-300 flex items-center flex-shrink-0 ${t.accentBg}`;
+                knob.className = 'w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-300 translate-x-5';
+            } else {
+                btn.className = 'w-12 h-7 rounded-full p-1 transition-colors duration-300 flex items-center flex-shrink-0 bg-stone-400/30';
+                knob.className = 'w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-300 translate-x-0';
+            }
         }
 
         function renderFormPeriodButtons() {
@@ -1934,6 +2146,7 @@
                     task.duration = duration;
                     task.days = [...formState.days];
                     task.note = note;
+                    task.core = formState.core;
                 }
                 showToast('ルーティーンを更新しました');
             } else {
@@ -1946,6 +2159,7 @@
                     duration,
                     days: [...formState.days],
                     note,
+                    core: formState.core,
                     order: maxOrder + 1
                 });
                 showToast('ルーティーンを追加しました');
@@ -1990,6 +2204,78 @@
         }
 
         /* ==========================================================================
+           バックアップ＆復元モーダル
+           ========================================================================== */
+        function openBackupModal() {
+            const t = getThemeClasses();
+            const modal = document.getElementById('backup-modal');
+            const card = document.getElementById('backup-modal-card');
+            card.className = `w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 safe-modal-bottom sm:pb-6 shadow-2xl animate-fade-up space-y-4 max-h-[90vh] overflow-y-auto ${t.isMorning ? 'bg-[#FAF7F2] text-morning-text' : 'bg-[#131A2C] text-night-text border border-slate-700/80'}`;
+
+            const textarea = document.getElementById('backup-json-textarea');
+            textarea.className = `w-full p-3.5 rounded-2xl border text-xs font-mono focus:outline-none focus:ring-2 transition-all ${t.input}`;
+            textarea.value = JSON.stringify({
+                app: 'Sora & Tsuki',
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                routines: state.routines,
+                history: state.history
+            });
+
+            document.getElementById('restore-backup-btn').className = `flex-1 py-3 rounded-2xl text-xs font-medium text-white shadow-sm transition-all active:scale-[0.98] ${t.accentBg}`;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeBackupModal() {
+            const modal = document.getElementById('backup-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function copyBackupToClipboard() {
+            const textarea = document.getElementById('backup-json-textarea');
+            if (!textarea) return;
+            textarea.focus();
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('バックアップデータをコピーしました');
+            } catch (e) {
+                showToast('枠内のテキストを長押ししてコピーしてください');
+            }
+        }
+
+        function applyBackupRestore() {
+            const textarea = document.getElementById('backup-json-textarea');
+            if (!textarea || !textarea.value.trim()) {
+                showToast('復元するデータを貼り付けてください');
+                return;
+            }
+            try {
+                const parsed = JSON.parse(textarea.value.trim());
+                if (!parsed || !Array.isArray(parsed.routines)) {
+                    showToast('有効なバックアップデータではありません');
+                    return;
+                }
+                const restoredRoutines = parsed.routines.map((r, i) => sanitizeRoutine(r, i)).filter(Boolean);
+                const restoredHistory = sanitizeHistory(parsed.history);
+
+                openConfirmModal('データの復元', '現在のデータを上書きしてバックアップ内容で復元しますか？', () => {
+                    state.routines = restoredRoutines;
+                    state.history = restoredHistory;
+                    saveState();
+                    closeBackupModal();
+                    render();
+                    showToast('バックアップからデータを復元しました');
+                });
+            } catch (e) {
+                showToast('データの形式が正しくありません（JSONエラー）');
+            }
+        }
+
+        /* ==========================================================================
            確認モーダル & トースト通知
            ========================================================================== */
         function openConfirmModal(title, message, onConfirm) {
@@ -2024,23 +2310,34 @@
             const toast = document.getElementById('toast');
             const t = getThemeClasses();
             toast.textContent = msg;
-            toast.className = `fixed top-20 left-1/2 -translate-x-1/2 z-[70] px-5 py-2.5 rounded-full text-xs font-medium shadow-xl transition-all duration-300 ${t.isMorning ? 'bg-[#2B2520] text-[#FAF7F2]' : 'bg-[#EEF1F7] text-[#0E131F]'} opacity-100 translate-y-0`;
+            toast.className = `fixed top-20 left-1/2 -translate-x-1/2 z-[70] px-5 py-2.5 rounded-full text-xs font-medium shadow-xl transition-all duration-300 max-w-[90vw] text-center ${t.isMorning ? 'bg-[#2B2520] text-[#FAF7F2]' : 'bg-[#EEF1F7] text-[#0E131F]'} opacity-100 translate-y-0`;
             clearTimeout(toastTimer);
             toastTimer = setTimeout(() => {
                 toast.classList.remove('opacity-100', 'translate-y-0');
                 toast.classList.add('opacity-0', 'translate-y-[-8px]', 'pointer-events-none');
-            }, 2500);
+            }, 2600);
         }
 
         /* ==========================================================================
-           タイマー付きガイドモード (Focus Mode)
+           タイマー付きガイドモード (Focus Mode - タイムスタンプ高精度方式)
            ========================================================================== */
+        function getFocusRemainingSignedSec() {
+            if (focusState.isRunning && focusState.endTimestamp !== null) {
+                return Math.ceil((focusState.endTimestamp - Date.now()) / 1000);
+            }
+            return focusState.pausedRemainingSec;
+        }
+
         function startFocusMode(startTaskId = null) {
             const today = new Date();
             const todayKey = getDateKey(today);
-            const allTasks = getTasksForDate(state.period, today);
+            const allTasks = getTasksForDate(state.period, today, false);
+            const hasCore = allTasks.some(t => t.core);
+            const useQuick = state.quickMode && hasCore && !startTaskId;
+
+            const targetTasks = useQuick ? allTasks.filter(t => t.core) : allTasks;
             const completedIds = getCompletedIds(state.period, todayKey);
-            let pendingTasks = allTasks.filter(t => !completedIds.includes(t.id));
+            let pendingTasks = targetTasks.filter(t => !completedIds.includes(t.id));
 
             if (pendingTasks.length === 0) {
                 showToast('今日の項目はすべて完了しています');
@@ -2082,12 +2379,19 @@
             }
             focusState.currentIndex = index;
             focusState.totalSec = (Number(task.duration) || 1) * 60;
-            focusState.remainingSec = focusState.totalSec;
+            focusState.pausedRemainingSec = focusState.totalSec;
+            focusState.endTimestamp = null;
+            focusState.overtimeAlerted = false;
 
             document.getElementById('focus-period-label').textContent = state.period === 'morning' ? 'Morning Ritual' : 'Night Ritual';
             document.getElementById('focus-step-counter').textContent = `${index + 1} / ${focusState.queue.length}`;
             document.getElementById('focus-task-title').textContent = task.title;
             document.getElementById('focus-task-note').textContent = task.note || '';
+
+            const remainingQueueMinutes = focusState.queue
+                .slice(index)
+                .reduce((sum, item) => sum + (Number(item.duration) || 1), 0);
+            document.getElementById('focus-eta-badge').textContent = `· ${formatEtaTime(remainingQueueMinutes)} 完了予定`;
 
             const nextTask = focusState.queue[index + 1];
             const nextEl = document.getElementById('focus-next-preview');
@@ -2101,12 +2405,19 @@
         }
 
         function updateFocusTimerUI() {
-            const mins = Math.floor(focusState.remainingSec / 60);
-            const secs = focusState.remainingSec % 60;
-            document.getElementById('focus-timer-display').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            const signedSec = getFocusRemainingSignedSec();
+            const isOvertime = signedSec < 0;
+            const absSec = Math.abs(signedSec);
+            const mins = Math.floor(absSec / 60);
+            const secs = absSec % 60;
 
-            const circumference = 552.92; // 2 * PI * 88
-            const ratio = focusState.totalSec > 0 ? focusState.remainingSec / focusState.totalSec : 0;
+            const displayEl = document.getElementById('focus-timer-display');
+            displayEl.textContent = `${isOvertime ? '+' : ''}${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+            const circumference = 552.92;
+            const ratio = isOvertime
+                ? 0
+                : (focusState.totalSec > 0 ? Math.max(0, signedSec) / focusState.totalSec : 0);
             const offset = circumference * (1 - ratio);
             document.getElementById('focus-ring-progress').style.strokeDashoffset = offset;
 
@@ -2114,32 +2425,41 @@
             const statusText = document.getElementById('focus-timer-status');
             if (focusState.isRunning) {
                 playBtn.innerHTML = `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`;
-                statusText.textContent = '進行中';
+                statusText.textContent = isOvertime ? '目安時間を超過中' : '進行中';
             } else {
                 playBtn.innerHTML = `<svg class="w-6 h-6 ml-0.5" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-                statusText.textContent = focusState.remainingSec === 0 ? '時間になりました' : '一時停止中';
+                statusText.textContent = isOvertime ? '超過 · 一時停止中' : '一時停止中';
             }
+        }
+
+        function tickFocusTimer() {
+            if (!focusState.isRunning) return;
+            const signedSec = getFocusRemainingSignedSec();
+            if (signedSec <= 0 && !focusState.overtimeAlerted) {
+                focusState.overtimeAlerted = true;
+                playTimerEndSound();
+                try {
+                    if (navigator.vibrate) navigator.vibrate([180, 80, 180]);
+                } catch (e) {}
+            }
+            updateFocusTimerUI();
         }
 
         function startFocusTimer() {
             if (focusState.isRunning) return;
             ensureAudioReady();
             focusState.isRunning = true;
+            focusState.endTimestamp = Date.now() + focusState.pausedRemainingSec * 1000;
             updateFocusTimerUI();
-            focusState.intervalId = setInterval(() => {
-                if (focusState.remainingSec > 0) {
-                    focusState.remainingSec--;
-                    updateFocusTimerUI();
-                    if (focusState.remainingSec === 0) {
-                        stopFocusTimer();
-                        playTimerEndSound();
-                    }
-                }
-            }, 1000);
+            focusState.intervalId = setInterval(tickFocusTimer, 250);
         }
 
         function stopFocusTimer() {
+            if (focusState.isRunning && focusState.endTimestamp !== null) {
+                focusState.pausedRemainingSec = Math.ceil((focusState.endTimestamp - Date.now()) / 1000);
+            }
             focusState.isRunning = false;
+            focusState.endTimestamp = null;
             if (focusState.intervalId) {
                 clearInterval(focusState.intervalId);
                 focusState.intervalId = null;
@@ -2151,16 +2471,18 @@
             if (focusState.isRunning) {
                 stopFocusTimer();
             } else {
-                if (focusState.remainingSec === 0) {
-                    focusState.remainingSec = 60;
-                    focusState.totalSec = Math.max(focusState.totalSec, 60);
-                }
                 startFocusTimer();
             }
         }
 
         function addOneMinuteFocus() {
-            focusState.remainingSec += 60;
+            if (focusState.isRunning && focusState.endTimestamp !== null) {
+                focusState.endTimestamp += 60000;
+                if (getFocusRemainingSignedSec() > 0) focusState.overtimeAlerted = false;
+            } else {
+                focusState.pausedRemainingSec += 60;
+                if (focusState.pausedRemainingSec > 0) focusState.overtimeAlerted = false;
+            }
             focusState.totalSec += 60;
             updateFocusTimerUI();
         }
@@ -2192,7 +2514,9 @@
             } else {
                 closeFocusMode();
                 render();
-                if (isPeriodFullyCompleted(state.period, new Date())) {
+                const allTodayTasks = getTasksForDate(state.period, new Date(), false);
+                const useQuick = state.quickMode && allTodayTasks.some(t => t.core);
+                if (isPeriodFullyCompleted(state.period, new Date(), useQuick)) {
                     playCompleteAllSound();
                     launchConfetti();
                     showToast('すべてのルーティーンを完了しました');
@@ -2267,7 +2591,7 @@
         }
 
         /* ==========================================================================
-           音声入力サポート (Web Speech API)
+           音声入力サポート (Web Speech API - モバイル確定漏れ対策済)
            ========================================================================== */
         const voiceState = {
             recognition: null,
@@ -2275,7 +2599,8 @@
             isListening: false,
             baseText: '',
             options: {},
-            finalRecognized: ''
+            finalRecognized: '',
+            latestInterim: ''
         };
 
         function getSpeechRecognitionCtor() {
@@ -2338,13 +2663,11 @@
                 return;
             }
 
-            // 同じ入力欄で録音中なら停止
             if (voiceState.isListening && voiceState.activeTargetId === targetId) {
                 stopVoiceInput();
                 return;
             }
 
-            // 別の入力欄で録音中なら一度停止
             if (voiceState.isListening) {
                 stopVoiceInput();
             }
@@ -2365,6 +2688,7 @@
                 voiceState.options = options;
                 voiceState.baseText = inputEl.value.trim();
                 voiceState.finalRecognized = '';
+                voiceState.latestInterim = '';
 
                 setVoiceButtonUI(targetId, true);
                 showToast('音声入力を開始しました。お話しください');
@@ -2383,18 +2707,21 @@
 
                     if (finalTranscript) {
                         voiceState.finalRecognized += finalTranscript;
+                        voiceState.latestInterim = '';
+                    } else {
+                        voiceState.latestInterim = interimTranscript;
                     }
 
-                    const spoken = (voiceState.finalRecognized + interimTranscript).trim();
+                    const spoken = (voiceState.finalRecognized + voiceState.latestInterim).trim();
                     const el = document.getElementById(targetId);
                     if (!el) return;
 
-                    // 既存テキストがある場合はスペースを挟んで追記（項目名が空ならそのまま）
                     const combined = voiceState.baseText && spoken
                         ? `${voiceState.baseText} ${spoken}`
                         : (spoken || voiceState.baseText);
                     const maxLen = parseInt(el.getAttribute('maxlength'), 10) || 80;
                     el.value = combined.slice(0, maxLen);
+                    syncInputClearBtn(targetId);
                 };
 
                 recognition.onerror = (event) => {
@@ -2413,7 +2740,7 @@
                 recognition.onend = () => {
                     const finishedTarget = voiceState.activeTargetId;
                     const finishedOptions = voiceState.options || {};
-                    const recognizedText = voiceState.finalRecognized.trim();
+                    const recognizedText = (voiceState.finalRecognized + voiceState.latestInterim).trim();
 
                     if (finishedTarget) {
                         setVoiceButtonUI(finishedTarget, false);
@@ -2425,7 +2752,8 @@
                     const el = finishedTarget ? document.getElementById(finishedTarget) : null;
                     if (!el || !recognizedText) return;
 
-                    // 項目名に「10分」などが含まれていれば所要時間を自動抽出
+                    syncInputClearBtn(finishedTarget);
+
                     if (finishedOptions.parseDuration) {
                         const normalized = normalizeDigits(el.value);
                         const match = normalized.match(/(\d{1,3})\s*分/);
@@ -2435,12 +2763,12 @@
                             if (durationInput) durationInput.value = mins;
                             const cleanedTitle = normalized.replace(/\s*\d{1,3}\s*分\s*/, ' ').trim();
                             if (cleanedTitle) el.value = cleanedTitle;
+                            syncInputClearBtn(finishedTarget);
                             showToast(`音声入力を反映しました（所要時間 ${mins}分）`);
                             return;
                         }
                     }
 
-                    // 今日のひとことメモは音声認識完了時に自動保存
                     if (finishedOptions.autoSaveJournalDate) {
                         saveDayJournal(finishedOptions.autoSaveJournalDate, finishedTarget);
                         return;
@@ -2478,7 +2806,6 @@
             return 'other';
         }
 
-        // 4芒星（ダイヤ型のきらめき）を描画するヘルパー
         function drawSparkleStar(ctx, cx, cy, outerR, innerR, color) {
             ctx.save();
             ctx.beginPath();
@@ -2496,7 +2823,6 @@
             ctx.restore();
         }
 
-        // 洗練された「Sora & Tsuki」アプリアイコン(PNG Data URL)を同期生成
         function buildAppIconDataUrl() {
             if (cachedAppIconDataUrl) return cachedAppIconDataUrl;
             try {
@@ -2506,7 +2832,6 @@
                 canvas.height = size;
                 const ctx = canvas.getContext('2d');
 
-                // 1. 夜空から暁へと移ろう深いグラデーション背景
                 const bgGrad = ctx.createLinearGradient(0, 0, size, size);
                 bgGrad.addColorStop(0, '#0B1121');
                 bgGrad.addColorStop(0.55, '#19223C');
@@ -2514,7 +2839,6 @@
                 ctx.fillStyle = bgGrad;
                 ctx.fillRect(0, 0, size, size);
 
-                // 2. 月光と朝陽が溶け合う柔らかなアンビエント光
                 const moonAura = ctx.createRadialGradient(225, 225, 10, 225, 225, 220);
                 moonAura.addColorStop(0, 'rgba(236, 214, 166, 0.28)');
                 moonAura.addColorStop(1, 'rgba(236, 214, 166, 0)');
@@ -2527,7 +2851,6 @@
                 ctx.fillStyle = sunAura;
                 ctx.fillRect(0, 0, size, size);
 
-                // 3. 天球儀をイメージした二重の繊細なゴールドリング
                 ctx.beginPath();
                 ctx.arc(256, 256, 176, 0, Math.PI * 2);
                 ctx.strokeStyle = 'rgba(232, 207, 160, 0.34)';
@@ -2543,7 +2866,6 @@
                 ctx.stroke();
                 ctx.restore();
 
-                // 4. なめらかなベジェ曲線で描くシャンパンゴールドの三日月
                 ctx.save();
                 ctx.shadowColor = 'rgba(245, 225, 180, 0.45)';
                 ctx.shadowBlur = 24;
@@ -2562,7 +2884,6 @@
                 ctx.fill();
                 ctx.restore();
 
-                // 5. 三日月の懐に寄り添うテラコッタ・アンバーの朝陽オーブ
                 ctx.save();
                 ctx.shadowColor = 'rgba(232, 146, 72, 0.55)';
                 ctx.shadowBlur = 22;
@@ -2575,7 +2896,6 @@
                 ctx.fill();
                 ctx.restore();
 
-                // 6. 静かに瞬く星々のアクセント
                 drawSparkleStar(ctx, 326, 182, 13, 3.2, 'rgba(247, 231, 196, 0.92)');
                 drawSparkleStar(ctx, 182, 186, 7, 1.8, 'rgba(247, 231, 196, 0.65)');
                 ctx.beginPath();
@@ -2590,7 +2910,6 @@
             }
         }
 
-        // iOS Safari / Android Chrome 両対応のアイコン＆マニフェスト即時登録
         function applyAppIconsAndManifest() {
             const iconDataUrl = buildAppIconDataUrl();
             if (!iconDataUrl) return;
@@ -2649,7 +2968,7 @@
             const t = getThemeClasses();
             const modal = document.getElementById('install-modal');
             const card = document.getElementById('install-modal-card');
-            card.className = `w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-fade-up space-y-5 max-h-[90vh] overflow-y-auto ${t.isMorning ? 'bg-[#FAF7F2] text-morning-text' : 'bg-[#131A2C] text-night-text border border-slate-700/80'}`;
+            card.className = `w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 safe-modal-bottom sm:pb-6 shadow-2xl animate-fade-up space-y-5 max-h-[90vh] overflow-y-auto ${t.isMorning ? 'bg-[#FAF7F2] text-morning-text' : 'bg-[#131A2C] text-night-text border border-slate-700/80'}`;
 
             const nativeSection = document.getElementById('native-install-section');
             const nativeBtn = document.getElementById('native-install-btn');
@@ -2732,15 +3051,44 @@
         }
 
         /* ==========================================================================
+           ライフサイクル監視（バックグラウンド復帰同期・日付跨ぎ検知・Escキー対応）
+           ========================================================================== */
+        function checkDayRollover() {
+            const currentKey = getDateKey(new Date());
+            if (currentKey !== lastRenderedDateKey) {
+                state.selectedCalendarDate = currentKey;
+                render();
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                checkDayRollover();
+                if (focusState.active && focusState.isRunning) {
+                    tickFocusTimer();
+                }
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeConfirmModal();
+                closeBackupModal();
+                closeInstallModal();
+                closeTaskModal();
+            }
+        });
+
+        /* ==========================================================================
            初期化
            ========================================================================== */
-        // ブラウザがホーム画面追加用のアイコンを早期取得できるよう即時生成
         applyAppIconsAndManifest();
 
         window.addEventListener('DOMContentLoaded', () => {
             loadState();
             initPwaSupport();
             render();
+            setInterval(checkDayRollover, 60000);
         });
     </script>
 </body>
